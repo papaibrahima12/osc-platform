@@ -28,7 +28,7 @@ function DashboardHome() {
   const { ngos, users, loading, fetchNGOs, fetchUsers } = useDemoStore();
 
   useEffect(() => {
-    fetchNGOs().then(r => console.log('ngos', r, ngos));
+    fetchNGOs();
     fetchUsers();
   }, [fetchNGOs, fetchUsers]);
 

@@ -29,7 +29,10 @@ export default function Profile() {
             <div>
               <label className="block text-sm font-medium text-gray-700">Rôle</label>
               <p className="mt-1 text-base text-gray-900">
-                {user?.role === 'admin' ? 'Administrateur' : 'Gestionnaire OSC'}
+                {
+                  user?.role === 'admin' ? 'Administrateur' :
+                  user?.role === 'super_admin' ? 'Super Administrateur' : 'Gestionnaire ONG'
+                }
               </p>
             </div>
 

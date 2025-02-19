@@ -31,7 +31,11 @@ export default function Navbar() {
               <div className="px-4 py-3 border-b border-gray-100">
                 <p className="text-sm font-medium text-gray-700">{user?.first_name} {user?.last_name}</p>
                 <p className="text-xs text-gray-500 mt-1">
-                  {user?.role === 'admin' ? 'Administrateur' : 'Gestionnaire ONG'}
+                  {
+                    user?.role === 'admin' ? 'Administrateur' :
+                    user?.role === 'super_admin' ? 'Super Administrateur' : 'Gestionnaire ONG'
+                  }
+
                 </p>
               </div>
               
