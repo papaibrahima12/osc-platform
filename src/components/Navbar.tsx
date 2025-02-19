@@ -21,7 +21,10 @@ export default function Navbar() {
             <div className="text-sm text-left hidden sm:block">
               <p className="font-medium text-gray-700">{user?.first_name} {user?.last_name}</p>
               <p className="text-gray-500 text-xs">
-                {user?.role === 'admin' ? 'Administrateur' : 'Gestionnaire OSC'}
+                {
+                  user?.role === 'admin' ? 'Administrateur' :
+                  user?.role === 'super_admin' ? 'Super Administrateur' : 'Gestionnaire OSC'
+                }
               </p>
             </div>
           </button>
@@ -33,7 +36,7 @@ export default function Navbar() {
                 <p className="text-xs text-gray-500 mt-1">
                   {
                     user?.role === 'admin' ? 'Administrateur' :
-                    user?.role === 'super_admin' ? 'Super Administrateur' : 'Gestionnaire ONG'
+                    user?.role === 'super_admin' ? 'Super Administrateur' : 'Gestionnaire OSC'
                   }
 
                 </p>
