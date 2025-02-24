@@ -1,6 +1,6 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { Routes, Route, useNavigate, Link } from 'react-router-dom';
-import { Plus, Building2, Users as UsersIcon, Activity, Target, Calendar } from 'lucide-react';
+import { Plus, Building2, Users as UsersIcon, Activity, Target } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
 import Navbar from '../components/Navbar';
 import Map from '../components/Map';
@@ -255,8 +255,7 @@ function NGOs() {
 
 function Administrators() {
   const { users, loading, fetchUsers } = useDemoStore();
-  const navigate = useNavigate();
-
+  useNavigate();
   useEffect(() => {
     fetchUsers();
   }, [fetchUsers]);

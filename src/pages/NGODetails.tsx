@@ -82,7 +82,7 @@ function NGODetails() {
   }
 
   const ngoActivities = activities.filter(activity => activity.ngo_id === ngo.id) || [];
-  const staff = ngo.staff || {};
+  const staff = ngo.staff;
 
   // Calculate totals
   const totalBeneficiaries = Object.values(ngo.beneficiaries || []).reduce((sum, data) => {
@@ -90,7 +90,7 @@ function NGODetails() {
   }, 0);
 
   const totalPersonnel = staff 
-    ? (staff.men_count || 0) + (staff.women_count || 0)
+    ? (staff?.men_count || 0) + (staff.women_count || 0)
     : 0;
 
   const totalRegions = (ngo.intervention_zones || []).filter(
@@ -168,9 +168,7 @@ function NGODetails() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Main Information */}
         <div className="lg:col-span-2 space-y-6">
-          {/* General Information */}
           <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
             <h2 className="text-lg font-semibold text-gray-900 mb-4">Informations générales</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -251,7 +249,6 @@ function NGODetails() {
             </div>
           </div>
 
-          {/* Contact Information */}
           {(ngo.contact_first_name || ngo.contact_last_name || ngo.contact_email || ngo.contact_phone) && (
             <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
               <h2 className="text-lg font-semibold text-gray-900 mb-4">Personne à contacter</h2>

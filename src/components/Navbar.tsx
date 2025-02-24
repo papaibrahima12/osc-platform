@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { User, Settings, LogOut } from 'lucide-react';
 import { useAuthStore } from '../store/auth';

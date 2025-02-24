@@ -61,13 +61,11 @@ const initialFormData = {
   creationYear: '',
   approvalYear: '',
   agreementDocument: undefined as File | undefined,
-  // Contact person information
   contactFirstName: '',
   contactLastName: '',
   contactEmail: '',
   contactPhone: '',
 
-  // Personnel Information
   staff: {
     men_count: 0,
     women_count: 0,
@@ -82,22 +80,16 @@ const initialFormData = {
     intern_count: 0
   },
 
-  // Intervention Zones
   intervention_zones: [] as NGOInterventionZone[],
 
-  // Activity Sectors
   activity_sectors:[] as NGOActivitySector[],
 
-  // Investment
   investments: [] as NGOInvestment[],
 
-  // Financial Resources
   financial_resources: [] as NGOFinancialResource[],
 
-  // Beneficiaries
   beneficiaries: [] as NGOBeneficiary[],
 
-  // Realizations
   realizations: [] as NGORealization[]
 };
 
@@ -223,8 +215,6 @@ export default function CreateNGO() {
     if (!sectors.length) {
       errors.push("Au moins une activité doit être renseignée");
     }
-
-
 
     return errors;
   };

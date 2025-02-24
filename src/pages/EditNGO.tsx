@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import {useNavigate} from 'react-router-dom';
 import { 
   Building2, 
   Users, 
@@ -21,7 +21,8 @@ import FinancialResourcesStep from '../components/FinancialResourcesStep';
 import BeneficiariesStep from '../components/BeneficiariesStep';
 import RealizationStep from '../components/RealizationStep';
 import { useDemoStore } from '../store/demo';
-import type { NGO } from '../types/user';
+import toast from "react-hot-toast";
+import {NGO} from "../types/user.ts";
 
 const steps = [
   { icon: Building2, label: 'Informations générales' },
@@ -39,11 +40,12 @@ interface EditNGOProps {
   onCancel: () => void;
 }
 
+
 function EditNGO({ ngo, onCancel }: EditNGOProps) {
   const navigate = useNavigate();
+  const { updateNGO } = useDemoStore();
   const [currentStep, setCurrentStep] = useState(1);
-  const [formData, setFormData] = useState({
-    // General Information
+  const initialFormData =       {
     name: ngo.name,
     status: ngo.status,
     otherStatus: ngo.other_status || '',
@@ -51,6 +53,8 @@ function EditNGO({ ngo, onCancel }: EditNGOProps) {
     otherCategory: ngo.other_category || '',
     scale: ngo.scale,
     address: ngo.address,
+    latitude: ngo.latitude,
+    longitude: ngo.longitude,
     email: ngo.email,
     phone: ngo.phone,
     website: ngo.website || '',
@@ -60,78 +64,32 @@ function EditNGO({ ngo, onCancel }: EditNGOProps) {
     creationYear: ngo.creation_year,
     approvalYear: ngo.approval_year || '',
     agreementDocument: undefined as File | undefined,
-    // Contact person information
-    contactFirstName: '',
-    contactLastName: '',
-    contactEmail: '',
-    contactPhone: '',
+    contactFirstName: ngo.contact_first_name || '',
+    contactLastName: ngo.contact_last_name || '',
+    contactEmail: ngo.contact_email || '',
+    contactPhone: ngo.contact_phone || '',
 
-    // Personnel Information
-    personnel_data: ngo.ngo_metadata?.personnel_data || {
-      men_count: 0,
-      women_count: 0,
-      young_18_25_count: 0,
-      young_26_35_count: 0,
-      disabled_count: 0,
-      expatriate_count: 0,
-      national_count: 0,
-      temporary_count: 0,
-      permanent_count: 0,
-      volunteer_count: 0,
-      intern_count: 0
-    },
-
-    // Intervention Zones
-    intervention_zones: ngo.ngo_metadata?.intervention_zones || {
-      west_africa_countries: [],
-      other_countries: [],
-      senegal_regions: [],
-      senegal_departments: [],
-      municipalities: []
-    },
-
-    // Activity Sectors
-    activity_sectors: ngo.ngo_metadata?.activity_sectors || {
-      activity_year: '',
-      sectors: {}
-    },
-
-    // Investment
-    investment_data: ngo.ngo_metadata?.investment_data || {
-      investment_year: '',
-      sectors: {}
-    },
-
-    // Financial Resources
-    financial_resources: ngo.ngo_metadata?.financial_resources || {
-      funding_year: '',
-      funding_types: [],
-      national_funding: {
-        government_grant: 0,
-        private_sector_grant: 0
-      },
-      international_funding: {}
-    },
-
-    // Beneficiaries
-    beneficiaries_data: ngo.ngo_metadata?.beneficiaries_data || {},
-
-    // Realizations
-    realizations: ngo.ngo_metadata?.realizations || {}
-  });
+    staff: ngo.staff ,
+    intervention_zones: ngo.intervention_zones || [],
+    activity_sectors: ngo.activity_sectors || [],
+    investments: ngo.investments || [],
+    financial_resources: ngo.financial_resources || [],
+    beneficiaries: ngo.beneficiaries || [],
+    realizations: ngo.realizations || []
+  }
+  const [formData, setFormData] = useState(initialFormData);
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { updateNGO, ngos } = useDemoStore();
 
   const handleFormUpdate = (updates: Partial<typeof formData>) => {
     setFormData((prev) => ({ ...prev, ...updates }));
     setError(null);
   };
 
-  const validateGeneralInformation = (data: typeof formData) => {
+  const validateGeneralInformation = (data: typeof initialFormData) => {
     const errors: string[] = [];
-    
+
     if (!data.name) errors.push('Le nom est requis');
     if (!data.status) errors.push('Le statut est requis');
     if (data.status === 'other' && !data.otherStatus) errors.push('Précisez le statut');
@@ -145,177 +103,82 @@ function EditNGO({ ngo, onCancel }: EditNGOProps) {
     if (!data.phone) errors.push('Le téléphone est requis');
     if (!data.creationYear) errors.push('La date de création est requise');
     if (data.status === 'ngo' && !data.approvalYear) errors.push("La date d'agrément est requise");
-
-    // Check if email already exists (excluding current NGO)
-    if (ngos.some(n => n.email === data.email && n.id !== ngo.id)) {
-      errors.push('Cette adresse email est déjà utilisée');
-    }
+    if (data.status === 'ngo' && !data.agreementDocument) errors.push("Le document d'agrément est requis");
+    if (!data.contactFirstName) errors.push('Le prénom du contact est requis');
+    if (!data.contactLastName) errors.push('Le nom du contact est requis');
+    if (!data.contactEmail) errors.push("L'email du contact est requis");
+    if (!data.contactPhone) errors.push('Le téléphone du contact est requis');
 
     return errors;
   };
 
-  const validatePersonnelInformation = (data: typeof formData) => {
+  const validatePersonnelInformation = (data: typeof initialFormData) => {
     const errors: string[] = [];
-    const personnel = data.personnel_data;
+    const staff = data.staff;
 
-    if (!personnel.men_count && !personnel.women_count) {
+    if (!staff?.men_count && !staff?.women_count) {
       errors.push('Au moins un homme ou une femme doit être renseigné');
     }
 
-    const total = (personnel.men_count || 0) + (personnel.women_count || 0);
+    const total = (staff?.men_count || 0) + (staff?.women_count || 0);
     if (total === 0) {
       errors.push('Le nombre total de personnel doit être supérieur à 0');
     }
 
-    const totalStatus = (personnel.temporary_count || 0) + 
-                       (personnel.permanent_count || 0) + 
-                       (personnel.volunteer_count || 0) + 
-                       (personnel.intern_count || 0);
-
-    if (totalStatus !== total) {
-      errors.push('La somme des statuts doit être égale au nombre total de personnel');
-    }
-
-    const totalOrigin = (personnel.expatriate_count || 0) + (personnel.national_count || 0);
-    if (totalOrigin !== total) {
-      errors.push("La somme des origines doit être égale au nombre total de personnel");
-    }
 
     return errors;
   };
 
-  const validateInterventionZones = (data: typeof formData) => {
-    const errors: string[] = [];
-    const zones = data.intervention_zones;
-
-    if (!zones.west_africa_countries.length) {
-      errors.push("Au moins un pays d'intervention doit être sélectionné");
-    }
-
-    if (zones.west_africa_countries.includes('Sénégal') && !zones.senegal_regions.length) {
-      errors.push('Au moins une région du Sénégal doit être sélectionnée');
-    }
-
-    if (zones.senegal_regions.length && !zones.senegal_departments.length) {
-      errors.push('Au moins un département doit être sélectionné');
-    }
-
-    if (zones.senegal_departments.length && !zones.municipalities.length) {
-      errors.push('Au moins une commune doit être sélectionnée');
-    }
-
-    return errors;
-  };
-
-  const validateActivitySectors = (data: typeof formData) => {
+  const validateActivitySectors = (data: typeof initialFormData) => {
     const errors: string[] = [];
     const sectors = data.activity_sectors;
 
-    if (!sectors.activity_year) {
-      errors.push("L'année d'activité est requise");
-    }
-
-    const hasActivities = Object.values(sectors.sectors).some(
-      sector => sector.total > 0
-    );
-
-    if (!hasActivities) {
+    if (!sectors?.length) {
       errors.push("Au moins une activité doit être renseignée");
     }
 
     return errors;
   };
 
-  const validateInvestment = (data: typeof formData) => {
+  const validateInvestment = (data: typeof initialFormData) => {
     const errors: string[] = [];
-    const investment = data.investment_data;
+    const investments = data.investments;
 
-    if (!investment.investment_year) {
-      errors.push("L'année d'investissement est requise");
-    }
-
-    const hasInvestments = Object.values(investment.sectors).some(
-      sector => sector.total > 0
-    );
-
-    if (!hasInvestments) {
+    if (!investments?.length) {
       errors.push("Au moins un investissement doit être renseigné");
     }
 
     return errors;
   };
 
-  const validateFinancialResources = (data: typeof formData) => {
+  const validateFinancialResources = (data: typeof initialFormData) => {
     const errors: string[] = [];
     const resources = data.financial_resources;
 
-    if (!resources.funding_year) {
-      errors.push("L'année de financement est requise");
-    }
-
-    if (!resources.funding_types.length) {
-      errors.push('Au moins un type de financement doit être sélectionné');
-    }
-
-    const hasNationalFunding = resources.funding_types.includes('national') && 
-      (resources.national_funding.government_grant > 0 || 
-       resources.national_funding.private_sector_grant > 0);
-
-    const hasInternationalFunding = resources.funding_types.includes('international') &&
-      Object.values(resources.international_funding).some(funding => 
-        funding.public_funding?.amount > 0 || funding.private_funding?.amount > 0
-      );
-
-    if (!hasNationalFunding && !hasInternationalFunding) {
-      errors.push('Au moins un montant de financement doit être renseigné');
+    if (!resources?.length) {
+      errors.push("Au moins une source de financement doit être renseignée");
     }
 
     return errors;
   };
 
-  const validateBeneficiaries = (data: typeof formData) => {
+  const validateBeneficiaries = (data: typeof initialFormData) => {
     const errors: string[] = [];
-    const beneficiaries = data.beneficiaries_data;
+    const beneficiaries = data.beneficiaries;
 
-    const hasBeneficiaries = Object.values(beneficiaries).some(
-      sector => sector.total > 0
-    );
-
-    if (!hasBeneficiaries) {
-      errors.push('Au moins un bénéficiaire doit être renseigné');
+    if (!beneficiaries?.length) {
+      errors.push("Au moins un bénéficiaire doit être renseigné");
     }
-
-    // Check if men + women equals total for each sector
-    Object.entries(beneficiaries).forEach(([sector, data]) => {
-      if (data.total > 0) {
-        if (data.men + data.women !== data.total) {
-          errors.push(`La somme des hommes et des femmes doit être égale au total pour le secteur ${sector}`);
-        }
-        if (data.young > data.total) {
-          errors.push(`Le nombre de jeunes ne peut pas dépasser le total pour le secteur ${sector}`);
-        }
-        if (data.disabled > data.total) {
-          errors.push(`Le nombre de personnes handicapées ne peut pas dépasser le total pour le secteur ${sector}`);
-        }
-        if (data.other_vulnerable > data.total) {
-          errors.push(`Le nombre d'autres personnes vulnérables ne peut pas dépasser le total pour le secteur ${sector}`);
-        }
-      }
-    });
 
     return errors;
   };
 
-  const validateRealizations = (data: typeof formData) => {
+  const validateRealizations = (data: typeof initialFormData) => {
     const errors: string[] = [];
     const realizations = data.realizations;
 
-    const hasRealizations = Object.values(realizations).some(
-      sector => Object.values(sector).some(value => value > 0)
-    );
-
-    if (!hasRealizations) {
-      errors.push('Au moins une réalisation doit être renseignée');
+    if (!realizations?.length) {
+      errors.push("Au moins une réalisation doit être renseignée");
     }
 
     return errors;
@@ -330,9 +193,6 @@ function EditNGO({ ngo, onCancel }: EditNGOProps) {
         break;
       case 2:
         errors = validatePersonnelInformation(formData);
-        break;
-      case 3:
-        errors = validateInterventionZones(formData);
         break;
       case 4:
         errors = validateActivitySectors(formData);
@@ -353,8 +213,10 @@ function EditNGO({ ngo, onCancel }: EditNGOProps) {
 
     if (errors.length > 0) {
       setError(errors.join('\n'));
+      errors.forEach(error => toast.error(error));
       return false;
     }
+    toast.success('Étape validée avec succès');
 
     return true;
   };
@@ -374,54 +236,54 @@ function EditNGO({ ngo, onCancel }: EditNGOProps) {
     }
   };
 
-  const handleStepClick = (step: number) => {
-    // Don't allow clicking on future steps
-    if (step > currentStep) return;
-
-    // For current step or next steps, validate
-    if (step < currentStep) {
-      // Validate all steps up to the current one before allowing to go back
-      for (let i = step; i <= currentStep; i++) {
-        const currentErrors = validateStep(i);
-        if (currentErrors.length > 0) {
-          setError(currentErrors.join('\n'));
-          return;
-        }
-      }
-      setCurrentStep(step);
-      setError(null);
-      return;
-    }
-
-    // For same step, just validate
-    if (validateCurrentStep()) {
-      setCurrentStep(step);
-    }
-  };
+  // const handleStepClick = (step: number) => {
+  //   // Don't allow clicking on future steps
+  //   if (step > currentStep) return;
+  //
+  //   // For current step or next steps, validate
+  //   if (step < currentStep) {
+  //     // Validate all steps up to the current one before allowing to go back
+  //     for (let i = step; i <= currentStep; i++) {
+  //       const currentErrors = validateStep(i);
+  //       if (currentErrors.length > 0) {
+  //         setError(currentErrors.join('\n'));
+  //         return;
+  //       }
+  //     }
+  //     setCurrentStep(step);
+  //     setError(null);
+  //     return;
+  //   }
+  //
+  //   // For same step, just validate
+  //   if (validateCurrentStep()) {
+  //     setCurrentStep(step);
+  //   }
+  // };
 
   // Helper function to validate a specific step
-  const validateStep = (step: number) => {
-    switch (step) {
-      case 1:
-        return validateGeneralInformation(formData);
-      case 2:
-        return validatePersonnelInformation(formData);
-      case 3:
-        return validateInterventionZones(formData);
-      case 4:
-        return validateActivitySectors(formData);
-      case 5:
-        return validateInvestment(formData);
-      case 6:
-        return validateFinancialResources(formData);
-      case 7:
-        return validateBeneficiaries(formData);
-      case 8:
-        return validateRealizations(formData);
-      default:
-        return [];
-    }
-  };
+  // const validateStep = (step: number) => {
+  //   switch (step) {
+  //     case 1:
+  //       return validateGeneralInformation(formData);
+  //     case 2:
+  //       return validatePersonnelInformation(formData);
+  //     case 3:
+  //       return validateInterventionZones(formData);
+  //     case 4:
+  //       return validateActivitySectors(formData);
+  //     case 5:
+  //       return validateInvestment(formData);
+  //     case 6:
+  //       return validateFinancialResources(formData);
+  //     case 7:
+  //       return validateBeneficiaries(formData);
+  //     case 8:
+  //       return validateRealizations(formData);
+  //     default:
+  //       return [];
+  //   }
+  // };
 
   const renderStepContent = () => {
     switch (currentStep) {
@@ -446,8 +308,8 @@ function EditNGO({ ngo, onCancel }: EditNGOProps) {
       case 2:
         return (
           <PersonnelInformationStep
-            data={formData.personnel_data}
-            onChange={(data) => handleFormUpdate({ personnel_data: data })}
+            data={formData.staff}
+            onChange={(data) => handleFormUpdate({ staff: data })}
           />
         );
       case 3:
@@ -467,9 +329,9 @@ function EditNGO({ ngo, onCancel }: EditNGOProps) {
       case 5:
         return (
           <InvestmentStep
-            data={formData.investment_data}
-            activitySectorsData={formData.activity_sectors}
-            onChange={(data) => handleFormUpdate({ investment_data: data })}
+            data={formData.investments}
+            activitySectors={formData.activity_sectors}
+            onChange={(data) => handleFormUpdate({ investments: data })}
           />
         );
       case 6:
@@ -482,16 +344,16 @@ function EditNGO({ ngo, onCancel }: EditNGOProps) {
       case 7:
         return (
           <BeneficiariesStep
-            data={formData.beneficiaries_data}
-            activitySectorsData={formData.activity_sectors}
-            onChange={(data) => handleFormUpdate({ beneficiaries_data: data })}
+            data={formData.beneficiaries}
+            activitySectors={formData.activity_sectors}
+            onChange={(data) => handleFormUpdate({ beneficiaries: data })}
           />
         );
       case 8:
         return (
           <RealizationStep
             data={formData.realizations}
-            activitySectorsData={formData.activity_sectors}
+            activitySectors={formData.activity_sectors}
             onChange={(data) => handleFormUpdate({ realizations: data })}
           />
         );
@@ -503,18 +365,15 @@ function EditNGO({ ngo, onCancel }: EditNGOProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validate current step
     if (!validateCurrentStep()) {
       return;
     }
 
-    // If not on the last step, just move to next step
     if (currentStep < steps.length) {
       handleNext();
       return;
     }
-    
-    // Only show confirmation dialog on final submit
+
     if (!window.confirm('Voulez-vous vraiment mettre à jour cette OSC ?')) {
       return;
     }
@@ -538,22 +397,29 @@ function EditNGO({ ngo, onCancel }: EditNGOProps) {
         twitter: formData.twitter,
         creation_year: formData.creationYear,
         approval_year: formData.approvalYear,
+        contact_first_name: formData.contactFirstName,
+        contact_last_name: formData.contactLastName,
+        contact_email: formData.contactEmail,
+        contact_phone: formData.contactPhone,
         is_active: true,
-        ngo_metadata: {
-          personnel_data: formData.personnel_data,
-          intervention_zones: formData.intervention_zones,
-          activity_sectors: formData.activity_sectors,
-          investment_data: formData.investment_data,
-          financial_resources: formData.financial_resources,
-          beneficiaries_data: formData.beneficiaries_data,
-          realizations: formData.realizations
-        }
+        agreementDocument: formData.agreementDocument,
+        staff: formData?.staff,
+        activity_sectors: formData?.activity_sectors,
+        intervention_zones: formData?.intervention_zones,
+        investments: formData?.investments,
+        financial_resources: formData?.financial_resources,
+        beneficiaries: formData?.beneficiaries,
+        realizations: formData?.realizations
       });
+
+      toast.success('OSC modifiée avec succès');
+      navigate(`/ngos/${ngo.id}`);
       
-      onCancel(); // Return to details view
+      onCancel();
     } catch (error) {
-      console.error('Error updating OSC:', error);
-      setError(error.message || 'Une erreur est survenue lors de la mise à jour de l\'OSC.');
+      const errorMessage = error.message || 'Une erreur est survenue lors de la mise à jour de l\'OSC.';
+      setError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -577,15 +443,14 @@ function EditNGO({ ngo, onCancel }: EditNGOProps) {
             return (
               <button
                 key={index}
-                onClick={() => handleStepClick(index + 1)}
+                onClick={() => setCurrentStep(index + 1)}
                 className={`flex flex-col items-center ${
                   isActive
                     ? 'text-blue-600'
                     : isCompleted
                     ? 'text-green-600 cursor-pointer'
-                    : 'text-gray-400 cursor-not-allowed'
+                          : 'text-gray-400'
                 }`}
-                disabled={index + 1 > currentStep}
               >
                 <div
                   className={`w-10 h-10 rounded-full flex items-center justify-center mb-2 ${

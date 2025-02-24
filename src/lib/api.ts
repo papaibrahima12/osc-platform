@@ -507,16 +507,14 @@ export async function updateNGO(id: string, data: Partial<NGO>) {
       .single();
 
     if (ngoError) throw ngoError;
+    console.error('ngoError', ngoError);
 
-    // Upload agreement document if provided
     if (agreementDocument && ngo.status === 'ngo') {
-      try {
-        // Validate file type
+
         if (!agreementDocument.type.includes('pdf')) {
           throw new Error('Le document doit être au format PDF');
         }
 
-        // Validate file size (5MB max)
         if (agreementDocument.size > 5 * 1024 * 1024) {
           throw new Error('Le document ne doit pas dépasser 5MB');
         }
@@ -530,64 +528,265 @@ export async function updateNGO(id: string, data: Partial<NGO>) {
           });
 
         if (uploadError) throw uploadError;
-      } catch (uploadError) {
-        throw uploadError;
+    }
+
+    if (staff) {
+      const { data: currentStaff } = await supabase
+          .from('ngo_staff')
+          .select('*')
+          .eq('ngo_id', id)
+          .maybeSingle();
+
+      const currentStaffString = JSON.stringify(currentStaff || {});
+      const newStaffString = JSON.stringify({ ...staff, ngo_id: id });
+      console.log('new Staff',newStaffString);
+      if (currentStaffString !== newStaffString) {
+        const { error: staffError } = await supabase
+            .from('ngo_staff')
+            .upsert(newStaffString);
+
+        if (staffError) throw staffError;
       }
     }
 
-    // Update related data
-    await Promise.all([
-      // Staff
-      staff && supabase
-        .from('ngo_staff')
-        .upsert({ ...staff, ngo_id: id }),
-      
-      // Activity sectors
-      activity_sectors?.length && (
-        supabase.from('ngo_activity_sectors').delete().eq('ngo_id', id),
-        supabase.from('ngo_activity_sectors')
-          .insert(activity_sectors.map(sector => ({ ...sector, ngo_id: id })))
-      ),
-      
-      // Intervention zones
-      intervention_zones?.length && (
-        supabase.from('ngo_intervention_zones').delete().eq('ngo_id', id),
-        supabase.from('ngo_intervention_zones')
-          .insert(intervention_zones.map(zone => ({ ...zone, ngo_id: id })))
-      ),
-      
-      // Investments
-      investments?.length && (
-        supabase.from('ngo_investments').delete().eq('ngo_id', id),
-        supabase.from('ngo_investments')
-          .insert(investments.map(investment => ({ ...investment, ngo_id: id })))
-      ),
-      
-      // Financial resources
-      financial_resources?.length && (
-        supabase.from('ngo_financial_resources').delete().eq('ngo_id', id),
-        supabase.from('ngo_financial_resources')
-          .insert(financial_resources.map(resource => ({ ...resource, ngo_id: id })))
-      ),
-      
-      // Beneficiaries
-      beneficiaries?.length && (
-        supabase.from('ngo_beneficiaries').delete().eq('ngo_id', id),
-        supabase.from('ngo_beneficiaries')
-          .insert(beneficiaries.map(beneficiary => ({ ...beneficiary, ngo_id: id })))
-      ),
-      
-      // Realizations
-      realizations?.length && (
-        supabase.from('ngo_realizations').delete().eq('ngo_id', id),
-        supabase.from('ngo_realizations')
-          .insert(realizations.map(realization => ({ ...realization, ngo_id: id })))
-      )
-    ]);
+    if (activity_sectors?.length) {
+      const { data: currentSectors } = await supabase
+          .from('ngo_activity_sectors')
+          .select('*')
+          .eq('ngo_id', id);
 
-    // Fetch updated NGO with all related data
+      const currentSectorsString = JSON.stringify(currentSectors?.sort((a, b) =>
+          `${a.sector}${a.subsector}`.localeCompare(`${b.sector}${b.subsector}`)
+      ));
+      const newSectorsString = JSON.stringify(activity_sectors.map(sector => ({
+        ...sector,
+        ngo_id: id
+      })).sort((a, b) =>
+          `${a.sector}${a.subsector}`.localeCompare(`${b.sector}${b.subsector}`)
+      ));
+
+      if (currentSectorsString !== newSectorsString) {
+        const { error: deleteError } = await supabase
+            .from('ngo_activity_sectors')
+            .delete()
+            .eq('ngo_id', id);
+
+        if (deleteError) throw deleteError;
+
+        const { error: insertError } = await supabase
+            .from('ngo_activity_sectors')
+            .insert(activity_sectors.map(sector => ({
+              ngo_id: id,
+              activity_year: sector.activity_year,
+              sector: sector.sector,
+              subsector: sector.subsector,
+              activity_count: sector.activity_count
+            })));
+
+        if (insertError) throw insertError;
+      }
+    }
+
+    if (intervention_zones) {
+      const { data: currentZones } = await supabase
+          .from('ngo_intervention_zones')
+          .select('*')
+          .eq('ngo_id', id);
+
+      const currentZonesString = JSON.stringify(currentZones?.sort((a, b) =>
+          `${a.zone_type}${a.name}`.localeCompare(`${b.zone_type}${b.name}`)
+      ));
+      const newZonesString = JSON.stringify(intervention_zones.map(zone => ({
+        ...zone,
+        ngo_id: id
+      })).sort((a, b) =>
+          `${a.zone_type}${a.name}`.localeCompare(`${b.zone_type}${b.name}`)
+      ));
+
+      if (currentZonesString !== newZonesString) {
+        await supabase.from('ngo_intervention_zones').delete().eq('ngo_id', id);
+
+        const countryAndRegionZones = intervention_zones.filter(
+            zone => zone.zone_type === 'country' || zone.zone_type === 'region'
+        );
+
+        if (countryAndRegionZones.length) {
+          const { data: insertedBasicZones, error: basicZonesError } = await supabase
+              .from('ngo_intervention_zones')
+              .insert(countryAndRegionZones.map(zone => ({
+                ngo_id: id,
+                zone_type: zone.zone_type,
+                name: zone.name,
+                parent_zone_id: null
+              })))
+              .select();
+
+          if (basicZonesError) throw basicZonesError;
+
+          const departmentZones = intervention_zones.filter(zone => zone.zone_type === 'department');
+          if (departmentZones.length) {
+            const regionMap = insertedBasicZones
+                .filter(zone => zone.zone_type === 'region')
+                .reduce((acc, region) => {
+                  acc[region.name] = region.id;
+                  return acc;
+                }, {} as Record<string, string>);
+
+            const { data: insertedDepts, error: deptsError } = await supabase
+                .from('ngo_intervention_zones')
+                .insert(departmentZones.map(zone => ({
+                  ngo_id: id,
+                  zone_type: zone.zone_type,
+                  name: zone.name,
+                  parent_zone_id: regionMap[zone.parent_zone_id || ''] || null
+                })))
+                .select();
+
+            if (deptsError) throw deptsError;
+
+            const municipalityZones = intervention_zones.filter(zone => zone.zone_type === 'municipality');
+            if (municipalityZones.length) {
+              const deptMap = insertedDepts.reduce((acc, dept) => {
+                acc[dept.name] = dept.id;
+                return acc;
+              }, {} as Record<string, string>);
+
+              const { error: muniError } = await supabase
+                  .from('ngo_intervention_zones')
+                  .insert(municipalityZones.map(zone => ({
+                    ngo_id: id,
+                    zone_type: zone.zone_type,
+                    name: zone.name,
+                    parent_zone_id: deptMap[zone.parent_zone_id || ''] || null
+                  })));
+
+              if (muniError) throw muniError;
+            }
+          }
+        }
+      }
+    }
+
+    if (investments?.length) {
+      const { data: currentInvestments } = await supabase
+          .from('ngo_investments')
+          .select('*')
+          .eq('ngo_id', id);
+
+      const currentInvestmentsString = JSON.stringify(currentInvestments?.sort((a, b) =>
+          `${a.sector}${a.subsector}`.localeCompare(`${b.sector}${b.subsector}`)
+      ));
+      const newInvestmentsString = JSON.stringify(investments.map(investment => ({
+        ...investment,
+        ngo_id: id
+      })).sort((a, b) =>
+          `${a.sector}${a.subsector}`.localeCompare(`${b.sector}${b.subsector}`)
+      ));
+
+      if (currentInvestmentsString !== newInvestmentsString) {
+        const { error: deleteError } = await supabase
+            .from('ngo_investments')
+            .delete()
+            .eq('ngo_id', id);
+
+        if (deleteError) throw deleteError;
+
+        const { error: insertError } = await supabase
+            .from('ngo_investments')
+            .insert(investments.map(investment => ({
+              ngo_id: id,
+              investment_year: investment.investment_year,
+              sector: investment.sector,
+              subsector: investment.subsector,
+              amount: investment.amount
+            })));
+
+        if (insertError) throw insertError;
+      }
+    }
+
+    if (financial_resources?.length) {
+      const { data: currentResources } = await supabase
+          .from('ngo_financial_resources')
+          .select('*')
+          .eq('ngo_id', id);
+
+      const currentResourcesString = JSON.stringify(currentResources?.sort((a, b) =>
+          `${a.funding_type}${a.funding_source}`.localeCompare(`${b.funding_type}${b.funding_source}`)
+      ));
+      const newResourcesString = JSON.stringify(financial_resources.map(resource => ({
+        ...resource,
+        ngo_id: id
+      })).sort((a, b) =>
+          `${a.funding_type}${a.funding_source}`.localeCompare(`${b.funding_type}${b.funding_source}`)
+      ));
+
+      if (currentResourcesString !== newResourcesString) {
+        const { error: deleteError } = await supabase
+            .from('ngo_financial_resources')
+            .delete()
+            .eq('ngo_id', id);
+
+        if (deleteError) throw deleteError;
+
+        const { error: insertError } = await supabase
+            .from('ngo_financial_resources')
+            .insert(financial_resources.map(resource => ({
+              ngo_id: id,
+              funding_year: resource.funding_year,
+              funding_type: resource.funding_type,
+              funding_source: resource.funding_source,
+              amount: resource.amount,
+              details: resource.details
+            })));
+
+        if (insertError) throw insertError;
+      }
+    }
+
+    if (beneficiaries?.length) {
+      const { data: currentBeneficiaries } = await supabase
+          .from('ngo_beneficiaries')
+          .select('*')
+          .eq('ngo_id', id);
+
+      const currentBeneficiariesString = JSON.stringify(currentBeneficiaries?.sort((a, b) =>
+          a.sector.localeCompare(b.sector)
+      ));
+      const newBeneficiariesString = JSON.stringify(beneficiaries.map(beneficiary => ({
+        ...beneficiary,
+        ngo_id: id
+      })).sort((a, b) =>
+          a.sector.localeCompare(b.sector)
+      ));
+
+      if (currentBeneficiariesString !== newBeneficiariesString) {
+        const { error: deleteError } = await supabase
+            .from('ngo_beneficiaries')
+            .delete()
+            .eq('ngo_id', id);
+
+        if (deleteError) throw deleteError;
+
+        const { error: insertError } = await supabase
+            .from('ngo_beneficiaries')
+            .insert(beneficiaries.map(beneficiary => ({
+              ngo_id: id,
+              sector: beneficiary.sector,
+              total: beneficiary.total,
+              men: beneficiary.men,
+              women: beneficiary.women,
+              young: beneficiary.young,
+              disabled: beneficiary.disabled,
+              other_vulnerable: beneficiary.other_vulnerable
+            })));
+
+        if (insertError) throw insertError;
+      }
+
     return getNGO(id);
-  } catch (error) {
+  }
+    }catch (error) {
     console.error('Error in updateNGO:', error);
     throw error;
   }
