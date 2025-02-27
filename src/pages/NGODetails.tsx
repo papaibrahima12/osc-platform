@@ -597,37 +597,37 @@ function NGODetails() {
           )}
 
           {/* Activities */}
-          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Activités récentes</h2>
-            <div className="space-y-4">
-              {ngoActivities.map((activity) => (
-                <div
-                  key={activity.id}
-                  className="flex items-center p-4 rounded-lg border border-gray-100 hover:bg-gray-50 transition-colors"
-                >
-                  <div className="p-2 rounded-lg bg-blue-50">
-                    <Activity className="w-5 h-5 text-blue-600" />
-                  </div>
-                  <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-900">{activity.name}</p>
-                    <p className="text-sm text-gray-500">
-                      {new Date(activity.activity_date).toLocaleDateString()}
-                    </p>
-                  </div>
-                  <div className="ml-auto">
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                      {activity.beneficiaries_count} bénéficiaires
-                    </span>
-                  </div>
-                </div>
-              ))}
-              {ngoActivities.length === 0 && (
-                <p className="text-center text-gray-500 py-4">
-                  Aucune activité enregistrée
-                </p>
-              )}
-            </div>
-          </div>
+          {/*<div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">*/}
+          {/*  <h2 className="text-lg font-semibold text-gray-900 mb-4">Activités récentes</h2>*/}
+          {/*  <div className="space-y-4">*/}
+          {/*    {ngoActivities.map((activity) => (*/}
+          {/*      <div*/}
+          {/*        key={activity.id}*/}
+          {/*        className="flex items-center p-4 rounded-lg border border-gray-100 hover:bg-gray-50 transition-colors"*/}
+          {/*      >*/}
+          {/*        <div className="p-2 rounded-lg bg-blue-50">*/}
+          {/*          <Activity className="w-5 h-5 text-blue-600" />*/}
+          {/*        </div>*/}
+          {/*        <div className="ml-4">*/}
+          {/*          <p className="text-sm font-medium text-gray-900">{activity.name}</p>*/}
+          {/*          <p className="text-sm text-gray-500">*/}
+          {/*            {new Date(activity.activity_date).toLocaleDateString()}*/}
+          {/*          </p>*/}
+          {/*        </div>*/}
+          {/*        <div className="ml-auto">*/}
+          {/*          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">*/}
+          {/*            {activity.beneficiaries_count} bénéficiaires*/}
+          {/*          </span>*/}
+          {/*        </div>*/}
+          {/*      </div>*/}
+          {/*    ))}*/}
+          {/*    {ngoActivities.length === 0 && (*/}
+          {/*      <p className="text-center text-gray-500 py-4">*/}
+          {/*        Aucune activité enregistrée*/}
+          {/*      </p>*/}
+          {/*    )}*/}
+          {/*  </div>*/}
+          {/*</div>*/}
         </div>
 
         {/* Sidebar */}

@@ -97,6 +97,7 @@ export default function PersonnelInformationStep({ data, onChange }: PersonnelIn
           onChange={(e) => handleInputChange(field, e.target.value)}
           className="block w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-blue-500"
           placeholder="0"
+          required
         />
       </div>
     </div>

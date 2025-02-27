@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useState} from 'react';
 import type { NGOInvestment, NGOActivitySector } from '../types/user';
 import { SECTORS } from './ActivitySectorsStep';
 
@@ -9,6 +9,8 @@ interface InvestmentStepProps {
 }
 
 export default function InvestmentStep({ data, activitySectors, onChange }: InvestmentStepProps) {
+  const [yearError, setYearError] = useState<string | null>(null);
+
   // Group investments by sector and subsector for display
   const groupedInvestments = data.reduce((acc, investment) => {
     if (!acc[investment.sector]) {
@@ -37,7 +39,27 @@ export default function InvestmentStep({ data, activitySectors, onChange }: Inve
     return acc;
   }, {} as Record<string, { total: number; subsectors: Record<string, number> }>);
 
+  const validateYear = (year: string): boolean => {
+    // Vérifier que c'est un nombre à 4 chiffres et ne dépasse pas 2025
+    const yearRegex = /^\d{4}$/;
+    if (!yearRegex.test(year)) {
+      setYearError("L'année doit être composée de 4 chiffres");
+      return false;
+    }
+
+    const yearNum = parseInt(year, 10);
+    if (yearNum > 2025) {
+      setYearError("L'année ne peut pas dépasser 2025");
+      return false;
+    }
+
+    // Effacer l'erreur si la validation est réussie
+    setYearError(null);
+    return true;
+  };
+
   const handleYearChange = (year: string) => {
+    validateYear(year);
     // Update all existing investments with new year
     const updatedInvestments = data.map(investment => ({
       ...investment,
@@ -105,11 +127,13 @@ export default function InvestmentStep({ data, activitySectors, onChange }: Inve
             Année d'investissement
           </label>
           <input
-              type="date"
-              disabled
+              type="text"
               value={investmentYear}
               onChange={(e) => handleYearChange(e.target.value)}
-              className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-blue-500"
+              className={`mt-1 block w-full rounded-lg border ${yearError ? 'border-red-300' : 'border-gray-300'} px-3 py-2 focus:border-blue-500 focus:ring-blue-500`}
+              placeholder="AAAA"
+              maxLength={4}
+              disabled
           />
         </div>
 

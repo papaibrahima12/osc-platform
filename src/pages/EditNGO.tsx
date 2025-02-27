@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import {useNavigate} from 'react-router-dom';
 import { 
   Building2, 
@@ -40,54 +40,83 @@ interface EditNGOProps {
   onCancel: () => void;
 }
 
+// Clé pour le stockage local avec l'ID de l'ONG
+const getFormStorageKey = (ngoId: string) => `ngo_edit_form_data_${ngoId}`;
+const getStepStorageKey = (ngoId: string) => `ngo_edit_current_step_${ngoId}`;
+
 
 function EditNGO({ ngo, onCancel }: EditNGOProps) {
   const navigate = useNavigate();
+  const formContainerRef = useRef<HTMLDivElement>(null);
+  const [currentStep, setCurrentStep] = useState(() => {
+    const savedStep = localStorage.getItem(getStepStorageKey(ngo.id));
+    return savedStep ? parseInt(savedStep, 10) : 1;
+  });
+
   const { updateNGO } = useDemoStore();
-  const [currentStep, setCurrentStep] = useState(1);
-  const initialFormData =       {
-    name: ngo.name,
-    status: ngo.status,
-    otherStatus: ngo.other_status || '',
-    category: ngo.category,
-    otherCategory: ngo.other_category || '',
-    scale: ngo.scale,
-    address: ngo.address,
-    latitude: ngo.latitude,
-    longitude: ngo.longitude,
-    email: ngo.email,
-    phone: ngo.phone,
-    website: ngo.website || '',
-    facebook: ngo.facebook || '',
-    linkedin: ngo.linkedin || '',
-    twitter: ngo.twitter || '',
-    creationYear: ngo.creation_year,
-    approvalYear: ngo.approval_year || '',
-    agreementDocument: undefined as File | undefined,
-    contactFirstName: ngo.contact_first_name || '',
-    contactLastName: ngo.contact_last_name || '',
-    contactEmail: ngo.contact_email || '',
-    contactPhone: ngo.contact_phone || '',
 
-    staff: ngo.staff ,
-    intervention_zones: ngo.intervention_zones || [],
-    activity_sectors: ngo.activity_sectors || [],
-    investments: ngo.investments || [],
-    financial_resources: ngo.financial_resources || [],
-    beneficiaries: ngo.beneficiaries || [],
-    realizations: ngo.realizations || []
-  }
-  const [formData, setFormData] = useState(initialFormData);
+  const [formData, setFormData] = useState(() =>{
+    const initialFormData = {
+      name: ngo.name,
+      status: ngo.status,
+      otherStatus: ngo.other_status || '',
+      category: ngo.category,
+      otherCategory: ngo.other_category || '',
+      scale: ngo.scale,
+      address: ngo.address,
+      latitude: ngo.latitude,
+      longitude: ngo.longitude,
+      email: ngo.email,
+      phone: ngo.phone,
+      website: ngo.website || '',
+      facebook: ngo.facebook || '',
+      linkedin: ngo.linkedin || '',
+      twitter: ngo.twitter || '',
+      creationYear: ngo.creation_year,
+      approvalYear: ngo.approval_year || '',
+      agreementDocument: undefined as File | undefined,
+      contactFirstName: ngo.contact_first_name || '',
+      contactLastName: ngo.contact_last_name || '',
+      contactEmail: ngo.contact_email || '',
+      contactPhone: ngo.contact_phone || '',
 
+      staff: ngo.staff ,
+      intervention_zones: ngo.intervention_zones || [],
+      activity_sectors: ngo.activity_sectors || [],
+      investments: ngo.investments || [],
+      financial_resources: ngo.financial_resources || [],
+      beneficiaries: ngo.beneficiaries || [],
+      realizations: ngo.realizations || []
+    }
+    const savedData = localStorage.getItem(getFormStorageKey(ngo.id));
+    if (savedData) {
+      try {
+        const parsedData = JSON.parse(savedData);
+        return { ...parsedData, agreementDocument: undefined };
+      } catch (e) {
+        console.error('Erreur lors de la récupération des données sauvegardées:', e);
+        return initialFormData;
+      }
+    }
+    return initialFormData;
+  });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const dataToSave = { ...formData };
+    delete dataToSave.agreementDocument;
+
+    localStorage.setItem(getFormStorageKey(ngo.id), JSON.stringify(dataToSave));
+    localStorage.setItem(getStepStorageKey(ngo.id), currentStep.toString());
+  }, [formData, currentStep, ngo.id]);
 
   const handleFormUpdate = (updates: Partial<typeof formData>) => {
     setFormData((prev) => ({ ...prev, ...updates }));
     setError(null);
   };
 
-  const validateGeneralInformation = (data: typeof initialFormData) => {
+  const validateGeneralInformation = (data: typeof formData) => {
     const errors: string[] = [];
 
     if (!data.name) errors.push('Le nom est requis');
@@ -112,7 +141,7 @@ function EditNGO({ ngo, onCancel }: EditNGOProps) {
     return errors;
   };
 
-  const validatePersonnelInformation = (data: typeof initialFormData) => {
+  const validatePersonnelInformation = (data: typeof formData) => {
     const errors: string[] = [];
     const staff = data.staff;
 
@@ -129,7 +158,7 @@ function EditNGO({ ngo, onCancel }: EditNGOProps) {
     return errors;
   };
 
-  const validateActivitySectors = (data: typeof initialFormData) => {
+  const validateActivitySectors = (data: typeof formData) => {
     const errors: string[] = [];
     const sectors = data.activity_sectors;
 
@@ -140,7 +169,7 @@ function EditNGO({ ngo, onCancel }: EditNGOProps) {
     return errors;
   };
 
-  const validateInvestment = (data: typeof initialFormData) => {
+  const validateInvestment = (data: typeof formData) => {
     const errors: string[] = [];
     const investments = data.investments;
 
@@ -151,7 +180,7 @@ function EditNGO({ ngo, onCancel }: EditNGOProps) {
     return errors;
   };
 
-  const validateFinancialResources = (data: typeof initialFormData) => {
+  const validateFinancialResources = (data: typeof formData) => {
     const errors: string[] = [];
     const resources = data.financial_resources;
 
@@ -162,7 +191,7 @@ function EditNGO({ ngo, onCancel }: EditNGOProps) {
     return errors;
   };
 
-  const validateBeneficiaries = (data: typeof initialFormData) => {
+  const validateBeneficiaries = (data: typeof formData) => {
     const errors: string[] = [];
     const beneficiaries = data.beneficiaries;
 
@@ -173,7 +202,7 @@ function EditNGO({ ngo, onCancel }: EditNGOProps) {
     return errors;
   };
 
-  const validateRealizations = (data: typeof initialFormData) => {
+  const validateRealizations = (data: typeof formData) => {
     const errors: string[] = [];
     const realizations = data.realizations;
 
@@ -225,6 +254,10 @@ function EditNGO({ ngo, onCancel }: EditNGOProps) {
     if (validateCurrentStep()) {
       if (currentStep < steps.length) {
         setCurrentStep(step => step + 1);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        if (formContainerRef.current) {
+          formContainerRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
       }
     }
   };
@@ -233,6 +266,10 @@ function EditNGO({ ngo, onCancel }: EditNGOProps) {
     if (currentStep > 1) {
       setCurrentStep(step => step - 1);
       setError(null);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      if (formContainerRef.current) {
+        formContainerRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
     }
   };
 

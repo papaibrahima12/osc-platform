@@ -1,5 +1,5 @@
-import React from 'react';
 import type { NGOActivitySector } from '../types/user';
+import {useEffect, useState} from "react";
 
 export const SECTORS = {
   democratic_governance: {
@@ -100,9 +100,10 @@ export const SECTORS = {
 interface ActivitySectorsStepProps {
   data: NGOActivitySector[];
   onChange: (data: NGOActivitySector[]) => void;
+  onYearChange?: (year: string) => void;
 }
 
-export default function ActivitySectorsStep({ data, onChange }: ActivitySectorsStepProps) {
+export default function ActivitySectorsStep({ data, onChange, onYearChange }: ActivitySectorsStepProps) {
   // Group activities by sector and subsector
   const groupedActivities = data.reduce((acc, activity) => {
     if (!acc[activity.sector]) {
@@ -115,16 +116,72 @@ export default function ActivitySectorsStep({ data, onChange }: ActivitySectorsS
     acc[activity.sector].total += activity.activity_count;
     return acc;
   }, {} as Record<string, { total: number; subsectors: Record<string, number> }>);
+  const [isInitialized, setIsInitialized] = useState(false);
+  const [activityYear, setActivityYear] = useState(() => {
+    // Chercher l'année dans les données existantes
+    if (data.length > 0 && data[0].activity_year) {
+      return data[0].activity_year;
+    }
+    // Valeur par défaut
+    return new Date().getFullYear().toString();
+  });
 
-  const activityYear = data[0]?.activity_year || new Date().getFullYear().toString();
+  useEffect(() => {
+    if (!isInitialized && data.length > 0 && data[0].activity_year) {
+      setActivityYear(data[0].activity_year);
+      setIsInitialized(true);
+    }
+  }, [data, isInitialized]);
 
+  const [yearError, setYearError] = useState<string | null>(null);
+
+  const validateYear = (year: string): boolean => {
+    const yearRegex = /^\d{4}$/;
+    if (!yearRegex.test(year)) {
+      setYearError("L'année doit être composée de 4 chiffres");
+      return false;
+    }
+
+    const yearNum = parseInt(year, 10);
+    if (yearNum > 2025) {
+      setYearError("L'année ne peut pas dépasser 2025");
+      return false;
+    }
+
+    setYearError(null);
+    return true;
+  };
   const handleYearChange = (year: string) => {
-    // Update all existing activities with new year
-    const updatedActivities = data.map(activity => ({
-      ...activity,
-      activity_year: year
-    }));
-    onChange(updatedActivities);
+    setActivityYear(year);
+
+    const isValid = validateYear(year);
+
+    if (isValid) {
+      let updatedActivities: NGOActivitySector[];
+
+      if (data.length > 0) {
+        // Mettre à jour les activités existantes avec la nouvelle année
+        updatedActivities = data.map(activity => ({
+          ...activity,
+          activity_year: year
+        }));
+      } else {
+        // Si aucune activité n'existe, créer une activité fictive pour persister l'année
+        // On la supprimera plus tard si elle reste vide
+        updatedActivities = [{
+          activity_year: year,
+          sector: 'education_training' as keyof typeof SECTORS,
+          subsector: 'education',
+          activity_count: 0
+        }];
+      }
+
+      onChange(updatedActivities);
+
+      if (onYearChange) {
+        onYearChange(year);
+      }
+    }
   };
 
   const handleActivityCountChange = (
@@ -145,7 +202,8 @@ export default function ActivitySectorsStep({ data, onChange }: ActivitySectorsS
       // Update existing activity
       newActivities[existingActivityIndex] = {
         ...newActivities[existingActivityIndex],
-        activity_count: numValue
+        activity_count: numValue,
+        activity_year: activityYear
       };
     } else if (numValue > 0) {
       // Only add new activity if count is greater than 0
@@ -159,6 +217,15 @@ export default function ActivitySectorsStep({ data, onChange }: ActivitySectorsS
 
     // Remove activities with zero count
     newActivities = newActivities.filter(activity => activity.activity_count > 0);
+
+    if (newActivities.length === 0) {
+      newActivities.push({
+        activity_year: activityYear,
+        sector: 'education_training' as keyof typeof SECTORS,
+        subsector: 'education',
+        activity_count: 0
+      });
+    }
 
     onChange(newActivities);
   };
@@ -185,11 +252,17 @@ export default function ActivitySectorsStep({ data, onChange }: ActivitySectorsS
             Année d'activité
           </label>
           <input
-              type="date"
+              type="text"
               value={activityYear}
               onChange={(e) => handleYearChange(e.target.value)}
-              className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-blue-500"
+              className={`mt-1 block w-full rounded-lg border ${yearError ? 'border-red-300' : 'border-gray-300'} px-3 py-2 focus:border-blue-500 focus:ring-blue-500`}
+              placeholder="AAAA"
+              maxLength={4}
+              required
           />
+          {yearError && (
+              <p className="mt-1 text-sm text-red-600">{yearError}</p>
+          )}
         </div>
 
         {/* Sectors */}

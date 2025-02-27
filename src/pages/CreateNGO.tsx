@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Building2, 
@@ -93,17 +93,62 @@ const initialFormData = {
   realizations: [] as NGORealization[]
 };
 
+const FORM_STORAGE_KEY = 'ngo_create_form_data';
+const STEP_STORAGE_KEY = 'ngo_create_current_step';
+
 export default function CreateNGO() {
   const navigate = useNavigate();
-  const [currentStep, setCurrentStep] = useState(1);
-  const [formData, setFormData] = useState(initialFormData);
+  const [selectedFileName, setSelectedFileName] = useState<string | null>(null);
+  const formContainerRef = useRef<HTMLDivElement>(null);
+  const [currentStep, setCurrentStep] = useState(() => {
+        // Récupérer l'étape sauvegardée ou utiliser la première étape
+        const savedStep = localStorage.getItem(STEP_STORAGE_KEY);
+        return savedStep ? parseInt(savedStep, 10) : 1;
+  });
+
+  const [formData, setFormData] = useState(() => {
+        // Récupérer les données sauvegardées ou utiliser les données initiales
+        const savedData = localStorage.getItem(FORM_STORAGE_KEY);
+        if (savedData) {
+            try {
+                const parsedData = JSON.parse(savedData);
+              const savedFileName = localStorage.getItem('agreement_document_name');
+              if (savedFileName) {
+                setSelectedFileName(savedFileName);
+              }
+                return { ...parsedData, agreementDocument: undefined };
+            } catch (e) {
+                console.error('Erreur lors de la récupération des données sauvegardées:', e);
+                return initialFormData;
+            }
+        }
+        return initialFormData;
+    });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { addNGO, ngos } = useDemoStore();
 
+  useEffect(() => {
+        const dataToSave = { ...formData };
+        delete dataToSave.agreementDocument;
+
+        localStorage.setItem(FORM_STORAGE_KEY, JSON.stringify(dataToSave));
+        localStorage.setItem(STEP_STORAGE_KEY, currentStep.toString());
+    }, [formData, currentStep]);
+
   const handleFormUpdate = (updates: Partial<typeof initialFormData>) => {
     setFormData((prev) => ({ ...prev, ...updates }));
     setError(null);
+  };
+
+  const handleActivityYearChange = (year: string) => {
+    if (formData.financial_resources.length > 0) {
+      const updatedResources = formData.financial_resources.map(resource => ({
+        ...resource,
+        funding_year: year
+      }));
+      handleFormUpdate({ financial_resources: updatedResources });
+    }
   };
 
   const validateGeneralInformation = (data: typeof initialFormData) => {
@@ -131,6 +176,10 @@ export default function CreateNGO() {
     // Check if email already exists
     if (ngos.some(ngo => ngo.email === data.email)) {
       errors.push('Cette adresse email est déjà utilisée');
+    }
+
+    if (data.status=== 'ngo'){
+      if(data.approvalYear < data.creationYear) errors.push("La date d'approbation ne doit pas etre superieure à la date de création")
     }
 
     return errors;
@@ -307,6 +356,10 @@ export default function CreateNGO() {
     if (validateCurrentStep()) {
       if (currentStep < steps.length) {
         setCurrentStep(step => step + 1);
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+          if (formContainerRef.current) {
+              formContainerRef.current.scrollIntoView({behavior: 'smooth', block: 'start'});
+          }
       }
     }
   };
@@ -314,6 +367,10 @@ export default function CreateNGO() {
   const handlePrevious = () => {
     if (currentStep > 1) {
       setCurrentStep(step => step - 1);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        if (formContainerRef.current) {
+            formContainerRef.current.scrollIntoView({behavior: 'smooth', block: 'start'});
+        }
       setError(null);
     }
   };
@@ -335,6 +392,11 @@ export default function CreateNGO() {
       }
       setCurrentStep(step);
       setError(null);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        // Ou faire défiler vers le haut du conteneur du formulaire
+        if (formContainerRef.current) {
+            formContainerRef.current.scrollIntoView({behavior: 'smooth', block: 'start'});
+        }
       return;
     }
 
@@ -368,6 +430,96 @@ export default function CreateNGO() {
     }
   };
 
+  const validateFormBeforeSubmit = () => {
+    const errors: string[] = [];
+
+    // Validate required fields in General Information
+    if (!formData.name) errors.push('Le nom est requis');
+    if (!formData.status) errors.push('Le statut est requis');
+    if (formData.status === 'other' && !formData.otherStatus) errors.push('Précisez le statut');
+    if (!formData.scale) errors.push("L'échelle est requise");
+    if (!formData.address) errors.push("L'adresse est requise");
+    if (!formData.email) errors.push("L'email est requis");
+    if (!formData.phone) errors.push('Le téléphone est requis');
+
+    // Validation de l'année de création
+    if (!formData.creationYear) {
+      errors.push('La date de création est requise');
+    } else {
+      const yearRegex = /^\d{4}$/;
+      if (!yearRegex.test(formData.creationYear)) {
+        errors.push("L'année de création doit être composée de 4 chiffres");
+      } else if (parseInt(formData.creationYear, 10) > 2025) {
+        errors.push("L'année de création ne peut pas dépasser 2025");
+      }
+    }
+
+    // Validation de l'année d'agrément pour les ONG
+    if (formData.status === 'ngo') {
+      if (!formData.approvalYear) {
+        errors.push("L'année d'agrément est requise");
+      } else {
+        const yearRegex = /^\d{4}$/;
+        if (!yearRegex.test(formData.approvalYear)) {
+          errors.push("L'année d'agrément doit être composée de 4 chiffres");
+        } else if (parseInt(formData.approvalYear, 10) > 2025) {
+          errors.push("L'année d'agrément ne peut pas dépasser 2025");
+        }
+      }
+
+      if (!formData.agreementDocument) {
+        errors.push("Le document d'agrément est requis");
+      }
+    }
+
+    // Check if email already exists
+    if (ngos.some(n => n.email === formData.email)) {
+      errors.push('Cette adresse email est déjà utilisée');
+    }
+
+    // Validation des années dans les autres étapes
+    if (formData.activity_sectors.length > 0) {
+      const activityYear = formData.activity_sectors[0].activity_year;
+      const yearRegex = /^\d{4}$/;
+      if (!yearRegex.test(activityYear)) {
+        errors.push("L'année d'activité doit être composée de 4 chiffres");
+      } else if (parseInt(activityYear, 10) > 2025) {
+        errors.push("L'année d'activité ne peut pas dépasser 2025");
+      }
+    }
+
+    if (formData.investments.length > 0) {
+      const investmentYear = formData.investments[0].investment_year;
+      const yearRegex = /^\d{4}$/;
+      if (!yearRegex.test(investmentYear)) {
+        errors.push("L'année d'investissement doit être composée de 4 chiffres");
+      } else if (parseInt(investmentYear, 10) > 2025) {
+        errors.push("L'année d'investissement ne peut pas dépasser 2025");
+      }
+    }
+
+    if (formData.financial_resources.length > 0) {
+      const fundingYear = formData.financial_resources[0].funding_year;
+      const yearRegex = /^\d{4}$/;
+      if (!yearRegex.test(fundingYear)) {
+        errors.push("L'année de financement doit être composée de 4 chiffres");
+      } else if (parseInt(fundingYear, 10) > 2025) {
+        errors.push("L'année de financement ne peut pas dépasser 2025");
+      }
+
+      // Vérifier que l'année de financement est la même que l'année d'activité
+      if (formData.activity_sectors.length > 0) {
+        const activityYear = formData.activity_sectors[0].activity_year;
+        if (fundingYear !== activityYear) {
+          errors.push("L'année de financement doit être la même que l'année d'activité");
+        }
+      }
+    }
+
+    return errors;
+  };
+
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     
@@ -379,6 +531,14 @@ export default function CreateNGO() {
     // If not on the last step, just move to next step
     if (currentStep < steps.length) {
       handleNext();
+      return;
+    }
+
+    // Only validate and show confirmation dialog on final submit
+    const errors = validateFormBeforeSubmit();
+    if (errors.length > 0) {
+      setError(errors.join('\n'));
+      setCurrentStep(1);
       return;
     }
     
@@ -393,8 +553,6 @@ export default function CreateNGO() {
     try {
       const activityYear = formData.activity_sectors[0]?.activity_year;
       const investmentYear = formData.activity_sectors[0]?.activity_year;
-      console.log('activityYear',  activityYear)
-      console.log('investmentYear',  investmentYear)
       if (activityYear !== investmentYear) {
         toast.error('"Les années d\'activité, d\'investissement doivent être identiques"');
         throw new Error("Les années d'activité, d'investissement doivent être identiques");
@@ -469,6 +627,8 @@ export default function CreateNGO() {
       // Create NGO with all related data
       await addNGO(ngoData);
       toast.success('OSC créée avec succès');
+      localStorage.removeItem(FORM_STORAGE_KEY);
+      localStorage.removeItem(STEP_STORAGE_KEY);
       navigate('/ngos');
     } catch (error) {
       const errorMessage = error.message || 'Une erreur est survenue lors de la création de l\'OSC.';
@@ -478,6 +638,7 @@ export default function CreateNGO() {
       setIsLoading(false);
     }
   };
+
 
   const renderStepContent = () => {
     switch (currentStep) {
@@ -518,6 +679,7 @@ export default function CreateNGO() {
           <ActivitySectorsStep
             data={formData.activity_sectors}
             onChange={(data) => handleFormUpdate({ activity_sectors: data })}
+            onYearChange={handleActivityYearChange}
           />
         );
       case 5:
@@ -529,12 +691,17 @@ export default function CreateNGO() {
           />
         );
       case 6:
+        { const activityYear = formData.activity_sectors.length > 0
+            ? formData.activity_sectors[0].activity_year
+            : undefined;
+
         return (
           <FinancialResourcesStep
             data={formData.financial_resources}
             onChange={(data) => handleFormUpdate({ financial_resources: data })}
+            activityYear={activityYear}
           />
-        );
+        ); }
       case 7:
         return (
           <BeneficiariesStep
@@ -611,7 +778,13 @@ export default function CreateNGO() {
           <div className="mt-8 flex justify-between">
             <button
               type="button"
-              onClick={() => navigate('/ngos')}
+              onClick={() => {
+                if (window.confirm('Êtes-vous sûr de vouloir annuler ? Toutes les données saisies seront perdues.')) {
+                  localStorage.removeItem(FORM_STORAGE_KEY);
+                  localStorage.removeItem(STEP_STORAGE_KEY);
+                  navigate('/ngos');
+                }
+              }}
               className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
             >
               Annuler

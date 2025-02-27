@@ -54,6 +54,40 @@ async function geocodeAddress(address: string): Promise<{ lat: number; lng: numb
 
 export default function GeneralInformationStep({ data, onChange }: GeneralInformationStepProps) {
   const [geocoding, setGeocoding] = useState(false);
+  const [yearErrors, setYearErrors] = useState<{
+    creationYear?: string;
+    approvalYear?: string;
+  }>({});
+
+  const validateYear = (year: string, field: 'creationYear' | 'approvalYear'): boolean => {
+    // Vérifier que c'est un nombre à 4 chiffres et ne dépasse pas 2025
+    const yearRegex = /^\d{4}$/;
+    if (!yearRegex.test(year)) {
+      setYearErrors(prev => ({ ...prev, [field]: "L'année doit être composée de 4 chiffres" }));
+      return false;
+    }
+
+    const yearNum = parseInt(year, 10);
+    if (yearNum > 2025) {
+      setYearErrors(prev => ({ ...prev, [field]: "L'année ne peut pas dépasser 2025" }));
+      return false;
+    }
+
+    if (field === 'approvalYear' && data.creationYear) {
+      const creationYearNum = parseInt(data.creationYear, 10);
+      if (yearRegex.test(data.creationYear) && yearNum <= creationYearNum) {
+        setYearErrors(prev => ({
+          ...prev,
+          [field]: "L'année d'agrément doit être supérieure à l'année de création"
+        }));
+        return false;
+      }
+    }
+
+    // Effacer l'erreur si la validation est réussie
+    setYearErrors(prev => ({ ...prev, [field]: undefined }));
+    return true;
+  };
 
   // Handle file selection
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -101,6 +135,14 @@ export default function GeneralInformationStep({ data, onChange }: GeneralInform
     } finally {
       setGeocoding(false);
     }
+  };
+
+  const handleYearChange = (year: string, field: 'creationYear' | 'approvalYear') => {
+    // Permettre la saisie même si invalide pour ne pas bloquer l'utilisateur
+    onChange({ [field]: year });
+
+    // Valider l'année
+    validateYear(year, field);
   };
 
   return (
@@ -370,13 +412,18 @@ export default function GeneralInformationStep({ data, onChange }: GeneralInform
                 Année de création <span className="text-red-500">*</span>
               </label>
               <input
-                  type="date"
+                  type="text"
                   id="creationYear"
                   value={data.creationYear}
-                  onChange={(e) => onChange({ creationYear: e.target.value })}
-                  className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-blue-500"
+                  onChange={(e) => handleYearChange(e.target.value, 'creationYear')}
+                  className={`mt-1 block w-full rounded-lg border ${yearErrors.creationYear ? 'border-red-300' : 'border-gray-300'} px-3 py-2 focus:border-blue-500 focus:ring-blue-500`}
+                  placeholder="AAAA"
+                  maxLength={4}
                   required
               />
+              {yearErrors.creationYear && (
+                  <p className="mt-1 text-sm text-red-600">{yearErrors.creationYear}</p>
+              )}
             </div>
 
             {/* Approval Year and Document - For NGOs */}
@@ -387,13 +434,18 @@ export default function GeneralInformationStep({ data, onChange }: GeneralInform
                       Année d'agrément <span className="text-red-500">*</span>
                     </label>
                     <input
-                        type="date"
+                        type="text"
                         id="approvalYear"
                         value={data.approvalYear || ''}
-                        onChange={(e) => onChange({ approvalYear: e.target.value })}
-                        className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-blue-500"
+                        onChange={(e) => handleYearChange(e.target.value, 'approvalYear')}
+                        className={`mt-1 block w-full rounded-lg border ${yearErrors.approvalYear ? 'border-red-300' : 'border-gray-300'} px-3 py-2 focus:border-blue-500 focus:ring-blue-500`}
+                        placeholder="AAAA"
+                        maxLength={4}
                         required
                     />
+                    {yearErrors.approvalYear && (
+                        <p className="mt-1 text-sm text-red-600">{yearErrors.approvalYear}</p>
+                    )}
                   </div>
 
                   <div>
