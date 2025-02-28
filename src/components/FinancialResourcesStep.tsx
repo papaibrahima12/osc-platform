@@ -170,7 +170,7 @@ const INTERNATIONAL_FUNDING_SOURCES = {
       { id: 'onu', label: 'ONU' },
       { id: 'world_bank', label: 'Banque Mondiale' },
       { id: 'bad', label: 'BAD' },
-      { id: 'cdao', label: 'CDAO' },
+      { id: 'cdao', label: 'CEDEAO' },
       { id: 'boad', label: 'BOAD' },
       { id: 'uemoa', label: 'UEMOA' }
     ]
