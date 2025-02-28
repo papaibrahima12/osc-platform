@@ -170,7 +170,7 @@ const INTERNATIONAL_FUNDING_SOURCES = {
       { id: 'onu', label: 'ONU' },
       { id: 'world_bank', label: 'Banque Mondiale' },
       { id: 'bad', label: 'BAD' },
-      { id: 'cdao', label: 'CEDEAO' },
+      { id: 'cedeao', label: 'CEDEAO' },
       { id: 'boad', label: 'BOAD' },
       { id: 'uemoa', label: 'UEMOA' }
     ]
@@ -341,6 +341,70 @@ export default function FinancialResourcesStep({ data, onChange, activityYear }:
 
   const isCountrySelected = (region: string, country: string): boolean => {
     return selectedCountries[region]?.includes(country) || false;
+  };
+
+  const getSourceLabel = (source) => {
+    // Sources nationales
+    for (const natSource of NATIONAL_FUNDING_SOURCES) {
+      if (source === natSource.id) {
+        return natSource.label;
+      }
+    }
+
+    // Sources internationales
+    const parts = source.split('_');
+    if (parts.length < 2) return source;
+
+    const region = parts[0];
+    const funding = INTERNATIONAL_FUNDING_SOURCES[region];
+    if (!funding) return source;
+
+    // Cas spécial pour les organisations multinationales
+    if (region === 'multi_nationalorg') {
+      // Format: multi_nationalorg_cdao
+      const orgId = parts[1]; // par exemple 'cdao'
+      const org = funding.sources.find(s => s.id === orgId);
+      if (org) return org.label;
+      return source;
+    }
+
+    // Traiter les cas spéciaux pour les pays membres
+    if (source.includes('member_states_') || source.includes('countries_')) {
+      const countryId = parts[parts.length - 1];
+      let countryList = [];
+
+      // Déterminer quelle liste de pays utiliser
+      if (region === 'eu') {
+        countryList = EU_COUNTRIES;
+      } else if (region === 'latam') {
+        countryList = LATAM_COUNTRIES;
+      }
+
+      const country = countryList.find(c => c.id === countryId);
+      if (country) {
+        return country.label;
+      }
+      return source;
+    }
+
+    // Autres sources internationales
+    const sourceType = parts[1]; // 'public' ou 'private'
+    const sourceId = parts.slice(2).join('_');
+
+    if (sourceType === 'public' && 'public' in funding) {
+      const source = funding.public.sources.find(s => s.id === sourceId);
+      if (source) return source.label;
+    }
+    else if (sourceType === 'private' && 'private' in funding) {
+      const source = funding.private.sources.find(s => s.id === sourceId);
+      if (source) return source.label;
+    }
+    else if ('sources' in funding) {
+      const source = funding.sources.find(s => s.id === sourceId || s.id === parts[1]);
+      if (source) return source.label;
+    }
+
+    return source;
   };
 
   return (
@@ -576,12 +640,16 @@ export default function FinancialResourcesStep({ data, onChange, activityYear }:
                       Total: {formatCurrency(total)}
                     </p>
                     <div className="mt-2 grid grid-cols-2 md:grid-cols-3 gap-2">
-                      {Object.entries(sources).map(([source, amount]) => (
-                          <p key={source} className="text-sm text-gray-600">
-                            <span className="font-medium">{source}:</span>{' '}
-                            {formatCurrency(amount)}
-                          </p>
-                      ))}
+                      {Object.entries(sources).map(([source, amount]) => {
+                        // Utiliser la fonction pour obtenir le libellé lisible
+                        const sourceLabel = getSourceLabel(source);
+                        return (
+                            <p key={source} className="text-sm text-gray-600">
+                              <span className="font-medium">{sourceLabel}:</span>{' '}
+                              {formatCurrency(amount)}
+                            </p>
+                        );
+                      })}
                     </div>
                   </div>
               );

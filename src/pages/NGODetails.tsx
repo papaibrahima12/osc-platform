@@ -535,63 +535,308 @@ function NGODetails() {
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-lg font-semibold text-gray-900">Sources de financement</h2>
                   <span className="text-sm text-gray-500">
-                  Année: {ngo.financial_resources[0].funding_year}
-                </span>
+        Année: {ngo.financial_resources[0].funding_year}
+      </span>
                 </div>
                 <div className="space-y-6">
-                  {/* National Funding */}
-                  {groupedResources['national']?.length > 0 && (
-                      <div className="p-4 bg-gray-50 rounded-lg">
-                        <h3 className="font-medium text-gray-900 mb-4">Financement national</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          {groupedResources['national'].map(resource => (
-                              <div key={resource.id} className="flex justify-between items-center">
-                          <span className="text-sm text-gray-600">
-                            {resource.funding_source === 'government_grant'
-                                ? 'Subvention gouvernementale'
-                                : 'Subvention secteur privé'
-                            }
-                          </span>
-                                <span className="font-medium text-gray-900">
-                            {formatCurrency(resource.amount)}
-                          </span>
-                              </div>
-                          ))}
-                        </div>
+                  {/* Summary Card */}
+                  <div className="p-4 bg-blue-50 rounded-lg border border-blue-100">
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="font-medium text-blue-900">Total des financements</span>
+                      <span className="text-lg font-bold text-blue-600">
+            {formatCurrency(totalFunding)}
+          </span>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
+                      <div className="flex justify-between">
+                        <span className="text-sm text-blue-700">Financement national</span>
+                        <span className="text-sm font-medium text-blue-900">
+              {formatCurrency((groupedResources['national'] || []).reduce((sum, r) => sum + (r.amount || 0), 0))}
+            </span>
                       </div>
-                  )}
+                      <div className="flex justify-between">
+                        <span className="text-sm text-blue-700">Financement international</span>
+                        <span className="text-sm font-medium text-blue-900">
+              {formatCurrency((groupedResources['international'] || []).reduce((sum, r) => sum + (r.amount || 0), 0))}
+            </span>
+                      </div>
+                    </div>
+                  </div>
 
-                  {/* International Funding */}
-                  {groupedResources['international']?.length > 0 && (
-                      <div className="p-4 bg-gray-50 rounded-lg">
-                        <h3 className="font-medium text-gray-900 mb-4">Financement international</h3>
-                        <div className="space-y-4">
-                          {groupedResources['international'].map(resource => {
-                            const [region, type, source] = resource.funding_source.split('_');
+                  {/* Table Display */}
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-200">
+                      <thead className="bg-gray-50">
+                      <tr>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Type
+                        </th>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Source
+                        </th>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Détails
+                        </th>
+                        <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Montant
+                        </th>
+                      </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                      {ngo.financial_resources.map((resource) => {
+                        // Get proper labels for funding type
+                        const typeLabel = resource.funding_type === 'national' ? 'National' : 'International';
+
+                        // Get proper labels for funding source
+                        let sourceLabel = '';
+                        let detailsLabel = '';
+
+                        if (resource.funding_type === 'national') {
+                          // National funding sources
+                          switch (resource.funding_source) {
+                            case 'government_grant':
+                              sourceLabel = 'Subvention gouvernementale';
+                              break;
+                            case 'private_grant':
+                              sourceLabel = 'Subvention secteur privé';
+                              break;
+                            case 'membership_fees':
+                              sourceLabel = 'Cotisations des membres';
+                              break;
+                            case 'donations':
+                              sourceLabel = 'Dons';
+                              break;
+                            case 'self_financing':
+                              sourceLabel = 'Autofinancement';
+                              break;
+                            default:
+                              sourceLabel = resource.funding_source || 'Autre';
+                          }
+
+                          // Get details for national funding
+                          detailsLabel = resource.details?.description || '';
+                        } else if (resource.funding_type === 'international') {
+                          // International funding source mapping based on the provided structure
+                          const source = resource.funding_source || '';
+                          const region = source.split('_')[0]; // ex: eu, usa, canada, etc.
+                          const fundingType = source.split('_')[1]; // ex: public, private
+                          const subSource = source.split('_')[2]; // ex: member_states, foundations, etc.
+                          // Set region label
+                          switch (region) {
+                            case 'eu':
+                              sourceLabel = 'Union Européenne';
+                              break;
+                            case 'usa':
+                              sourceLabel = 'États-Unis';
+                              break;
+                            case 'canada':
+                              sourceLabel = 'Canada';
+                              break;
+                            case 'latam':
+                              sourceLabel = 'Amérique Latine';
+                              break;
+                            case 'arab':
+                              sourceLabel = 'Pays Arabes';
+                              break;
+                            case 'uk':
+                              sourceLabel = 'Royaume-Uni';
+                              break;
+                            case 'multi':
+                              sourceLabel = 'Organisations multinationales';
+                              break;
+                            default:
+                              sourceLabel = 'Autre International';
+                          }
+
+                          // Add funding type to details if available (public/private)
+                          let fundingTypeLabel = '';
+                          if (fundingType === 'public') {
+                            fundingTypeLabel = 'Financement publique';
+                          } else if (fundingType === 'private') {
+                            fundingTypeLabel = 'Financement privé';
+                          }
+
+                          // Add specific sub-source to details if available
+                          let subSourceLabel = '';
+                          if (subSource) {
+                            // Map specific sources based on the region and funding type
+                            if (region === 'eu') {
+                              if (subSource === 'member_states') subSourceLabel = 'États membres';
+                              else if (subSource === 'territorial_collectivities') subSourceLabel = 'Collectivités territoriales';
+                              else if (subSource === 'foundations') subSourceLabel = 'Fondations';
+                              else if (subSource === 'ngos') subSourceLabel = 'ONG';
+                            } else if (region === 'usa') {
+                              if (subSource === 'usaid') subSourceLabel = 'USAID';
+                              else if (subSource === 'mcc') subSourceLabel = 'MCC';
+                              else if (subSource === 'peaceCorp') subSourceLabel = 'Peace Corp';
+                              else if (subSource === 'foundations') subSourceLabel = 'Fondations';
+                              else if (subSource === 'ngos') subSourceLabel = 'ONG';
+                            } else if (region === 'canada') {
+                              if (subSource === 'acdi') subSourceLabel = 'ACDI';
+                              else if (subSource === 'crdi') subSourceLabel = 'CRDI';
+                              else if (subSource === 'ceci') subSourceLabel = 'CECI';
+                              else if (subSource === 'foundations') subSourceLabel = 'Fondations';
+                              else if (subSource === 'ngos') subSourceLabel = 'ONG';
+                            } else if (region === 'latam') {
+                              if (subSource === 'countries') subSourceLabel = 'Pays';
+                              else if (subSource === 'foundations') subSourceLabel = 'Fondations';
+                              else if (subSource === 'ngos') subSourceLabel = 'ONG';
+                            } else if (region === 'arab') {
+                              if (subSource === 'saudi_arabia') subSourceLabel = 'Arabie Saoudite';
+                              else if (subSource === 'uae') subSourceLabel = 'Émirats Arabes Unis';
+                              else if (subSource === 'kuwait') subSourceLabel = 'Koweït';
+                              else if (subSource === 'qatar') subSourceLabel = 'Qatar';
+                              else if (subSource === 'foundations') subSourceLabel = 'Fondations';
+                              else if (subSource === 'ngos') subSourceLabel = 'ONG';
+                            } else if (region === 'uk') {
+                              if (subSource === 'ambassy') subSourceLabel = 'Ambassade';
+                              else if (subSource === 'foundations') subSourceLabel = 'Fondations';
+                              else if (subSource === 'ngos') subSourceLabel = 'ONG';
+                            } else if (region === 'multi_nationalorg') {
+                              if (subSource === 'onu') subSourceLabel = 'ONU';
+                              else if (subSource === 'world_bank') subSourceLabel = 'Banque Mondiale';
+                              else if (subSource === 'bad') subSourceLabel = 'BAD';
+                              else if (subSource === 'cedeao') subSourceLabel = 'CEDEAO';
+                              else if (subSource === 'boad') subSourceLabel = 'BOAD';
+                              else if (subSource === 'uemoa') subSourceLabel = 'UEMOA';
+                            }
+
+                            if (subSource === 'other') subSourceLabel = 'Autres';
+                          }
+
+                          // Build details string from available fields
+                          const details = [];
+                          if (fundingTypeLabel) details.push(fundingTypeLabel);
+                          if (subSourceLabel) details.push(subSourceLabel);
+                          if (resource.details?.country) details.push(resource.details.country);
+                          if (resource.details?.description) details.push(resource.details.description);
+
+                          detailsLabel = details.join(' - ') || '';
+                        }
+
+                        return (
+                            <tr key={resource.id}>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                {typeLabel}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {sourceLabel}
+                              </td>
+                              <td className="px-6 py-4 text-sm text-gray-500">
+                                {detailsLabel}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-right font-medium text-gray-900">
+                                {formatCurrency(resource.amount)}
+                              </td>
+                            </tr>
+                        );
+                      })}
+                      </tbody>
+                      <tfoot className="bg-gray-50">
+                      <tr>
+                        <td colSpan={3} className="px-6 py-3 text-right text-sm font-medium text-gray-900">
+                          Total
+                        </td>
+                        <td className="px-6 py-3 text-right text-sm font-bold text-gray-900">
+                          {formatCurrency(totalFunding)}
+                        </td>
+                      </tr>
+                      </tfoot>
+                    </table>
+                  </div>
+
+                  {/* Funding Distribution Chart */}
+                  {ngo.financial_resources.length > 1 && (
+                      <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+                        <h3 className="text-sm font-medium text-gray-700 mb-3">Répartition des financements</h3>
+                        <div className="space-y-3">
+                          {Object.entries(groupedResources).map(([type, resources]) => {
+                            const total = resources.reduce((sum, r) => sum + r.amount, 0);
+                            const percentage = Math.round((total / totalFunding) * 100);
+                            const typeLabel = type === 'national' ? 'National' : 'International';
+
                             return (
-                                <div key={resource.id} className="flex justify-between items-center">
-                            <span className="text-sm text-gray-600">
-                              {resource.details?.region} - {resource.details?.type} - {source}
-                            </span>
-                                  <span className="font-medium text-gray-900">
-                              {formatCurrency(resource.amount)}
-                            </span>
+                                <div key={type} className="relative pt-1">
+                                  <div className="flex mb-2 items-center justify-between">
+                                    <div>
+                      <span className="text-xs font-semibold inline-block text-gray-800">
+                        {typeLabel}
+                      </span>
+                                    </div>
+                                    <div className="text-right">
+                      <span className="text-xs font-semibold inline-block text-gray-800">
+                        {percentage}%
+                      </span>
+                                    </div>
+                                  </div>
+                                  <div className="overflow-hidden h-2 mb-4 text-xs flex rounded bg-gray-200">
+                                    <div
+                                        style={{ width: `${percentage}%` }}
+                                        className={`shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center ${
+                                            type === 'national' ? 'bg-green-500' : 'bg-blue-500'
+                                        }`}
+                                    ></div>
+                                  </div>
                                 </div>
                             );
                           })}
+
+                          {/* Add detailed international funding breakdown if available */}
+                          {groupedResources['international']?.length > 1 && (
+                              <div className="mt-4">
+                                <h4 className="text-xs font-medium text-gray-700 mb-2">Répartition des financements internationaux</h4>
+                                {Object.entries(
+                                    groupedResources['international'].reduce((acc, resource) => {
+                                      const region = (resource.funding_source || '').split('.')[0];
+                                      if (!region) return acc;
+
+                                      let regionLabel = '';
+                                      switch (region) {
+                                        case 'eu': regionLabel = 'Union Européenne'; break;
+                                        case 'usa': regionLabel = 'États-Unis'; break;
+                                        case 'canada': regionLabel = 'Canada'; break;
+                                        case 'latam': regionLabel = 'Amérique Latine'; break;
+                                        case 'arab': regionLabel = 'Pays Arabes'; break;
+                                        case 'uk': regionLabel = 'Royaume-Uni'; break;
+                                        case 'multi_nationalorg': regionLabel = 'Org. multinationales'; break;
+                                        default: regionLabel = 'Autre';
+                                      }
+
+                                      acc[regionLabel] = (acc[regionLabel] || 0) + (resource.amount || 0);
+                                      return acc;
+                                    }, {})
+                                ).map(([region, amount]) => {
+                                  const intTotal = groupedResources['international'].reduce((sum, r) => sum + r.amount, 0);
+                                  const percentage = Math.round((amount / intTotal) * 100);
+
+                                  return (
+                                      <div key={region} className="relative pt-1">
+                                        <div className="flex mb-2 items-center justify-between">
+                                          <div>
+                          <span className="text-xs font-semibold inline-block text-gray-800">
+                            {region}
+                          </span>
+                                          </div>
+                                          <div className="text-right">
+                          <span className="text-xs font-semibold inline-block text-gray-800">
+                            {percentage}%
+                          </span>
+                                          </div>
+                                        </div>
+                                        <div className="overflow-hidden h-2 mb-4 text-xs flex rounded bg-gray-200">
+                                          <div
+                                              style={{ width: `${percentage}%` }}
+                                              className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-indigo-500"
+                                          ></div>
+                                        </div>
+                                      </div>
+                                  );
+                                })}
+                              </div>
+                          )}
                         </div>
                       </div>
                   )}
-
-                  {/* Total */}
-                  <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-100">
-                    <div className="flex justify-between items-center">
-                      <span className="font-medium text-blue-900">Total des financements</span>
-                      <span className="text-lg font-bold text-blue-600">
-                      {formatCurrency(totalFunding)}
-                    </span>
-                    </div>
-                  </div>
                 </div>
               </div>
           )}
