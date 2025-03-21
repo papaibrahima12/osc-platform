@@ -28,7 +28,7 @@ const steps = [
   { icon: Building2, label: 'Informations générales' },
   { icon: Users, label: 'Personnel' },
   { icon: MapPin, label: "Zones d'intervention" },
-  { icon: Activity, label: "Secteurs d'activité" },
+  { icon: Activity, label: "Projets" },
   { icon: Wallet, label: 'Investissement' },
   { icon: DollarSign, label: 'Source de financement' },
   { icon: Target, label: 'Bénéficiaires' },

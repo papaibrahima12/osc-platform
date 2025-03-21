@@ -471,8 +471,10 @@ function NGODetails() {
                       </h3>
                       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                         {sectorInvestments.map(investment => (
-                          <div key={investment.id} className="text-sm">
-                            <span className="text-gray-600">
+                          <div key={investment.id}
+                               className="text-sm break-words min-w-0"
+                          >
+                            <span className="text-gray-600 block truncate">
                               {sector.subsectors[investment.subsector]}: 
                             </span>
                             <span className="font-medium text-gray-900 ml-1">
@@ -899,6 +901,7 @@ function NGODetails() {
                    ngo.status === 'public_utility' ? 'Organisation d’utilité publique' :
                    ngo.status === 'gie' ? 'GIE' :
                    ngo.status === 'cooperative' ? 'Coopérative' :
+                   ngo.status === 'responsible_entity' ? 'Association entreprenante responsable' :
                    ngo.status === 'other' ? 'Autre' :
                    ngo.other_status || 'Autre'}
                 </p>
@@ -980,8 +983,17 @@ function NGODetails() {
                       <p className="text-gray-600">Hommes: <span className="font-medium">{beneficiary.men}</span></p>
                       <p className="text-gray-600">Femmes: <span className="font-medium">{beneficiary.women}</span></p>
                       <p className="text-gray-600">Jeunes: <span className="font-medium">{beneficiary.young}</span></p>
-                      <p className="text-gray-600">Handicapés: <span className="font-medium">{beneficiary.disabled}</span></p>
-                      <p className="text-gray-600">Autres vulnérables: <span className="font-medium">{beneficiary.other_vulnerable}</span></p>
+                      <p className="text-gray-600">Enfants: <span className="font-medium">{beneficiary.kids}</span></p>
+                      <p className="text-gray-600">Femmes Enceintes: <span className="font-medium">{beneficiary.pregnant_women || 0}</span></p>
+                      <p className="text-gray-600">Femmes Allaitantes: <span className="font-medium">{beneficiary.lactating_women || 0}</span></p>
+                      <p className="text-gray-600">Enseignants: <span className="font-medium">{beneficiary.teachers || 0}</span></p>
+                      <p className="text-gray-600">Elèves: <span className="font-medium">{beneficiary.students || 0}</span></p>
+                      <p className="text-gray-600">Entités Morales: <span className="font-medium">{beneficiary.legal_entities || 0}</span></p>
+                      <p className="text-gray-600">Enfants (0-36 mois): <span className="font-medium">{beneficiary.child_before_preschool_age || 0}</span></p>
+                      <p className="text-gray-600">Enfants (3-6 ans): <span className="font-medium">{beneficiary.preschool_age_child || 0}</span></p>
+                      <p className="text-gray-600">Enfants (7-15 ans): <span className="font-medium">{beneficiary.school_age_child || 0}</span></p>
+                      <p className="text-gray-600">Handicapés: <span className="font-medium">{beneficiary.disabled || 0}</span></p>
+                      <p className="text-gray-600">Autres vulnérables: <span className="font-medium">{beneficiary.other_vulnerable || 0}</span></p>
                     </div>
                   </div>
                 ))}

@@ -1,6 +1,5 @@
-import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { Home, Building2, Activity, LogOut, Globe2, BarChart3, Users } from 'lucide-react';
+import {Home, Building2, Activity, LogOut, Globe2, BarChart3, Users, Book, DollarSign} from 'lucide-react';
 import { useAuthStore } from '../store/auth';
 
 interface SidebarProps {
@@ -25,8 +24,8 @@ export default function Sidebar({ role }: SidebarProps) {
             <Globe2 className="w-8 h-8 text-white" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-gray-900">Plateforme</h1>
-            <p className="text-sm font-medium text-blue-600">des OSC</p>
+            <h1 className="text-2xl font-bold text-blue-600">e_OSC</h1>
+            <p className="text-sm font-medium text-gray-900">Sénégal</p>
           </div>
         </div>
       </div>
@@ -49,6 +48,14 @@ export default function Sidebar({ role }: SidebarProps) {
             <NavLink to="/ngos" className={linkClass}>
               <Building2 className="w-5 h-5" />
               <span>OSC</span>
+            </NavLink>
+            <NavLink to="/agreements" className={linkClass}>
+              <Book className="w-5 h-5" />
+              <span>Demande d'agréments</span>
+            </NavLink>
+            <NavLink to="/investments_plans" className={linkClass}>
+              <DollarSign className="w-5 h-5" />
+              <span>Plan d'investissement</span>
             </NavLink>
             <NavLink to="/reports" className={linkClass}>
               <BarChart3 className="w-5 h-5" />

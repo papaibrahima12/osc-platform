@@ -450,6 +450,15 @@ export async function createNGO(data: Omit<NGO, 'id' | 'created_at' | 'updated_a
                 men: beneficiary.men,
                 women: beneficiary.women,
                 young: beneficiary.young,
+                kids: beneficiary.kids,
+                pregnant_women: beneficiary.pregnant_women,
+                lactating_women: beneficiary.lactating_women,
+                teachers: beneficiary.teachers,
+                students: beneficiary.students,
+                legal_entities: beneficiary.legal_entities,
+                child_before_preschool_age: beneficiary.child_before_preschool_age,
+                preschool_age_child: beneficiary.preschool_age_child,
+                school_age_child: beneficiary.school_age_child,
                 disabled: beneficiary.disabled,
                 other_vulnerable: beneficiary.other_vulnerable
               })))
@@ -777,6 +786,15 @@ export async function updateNGO(id: string, data: Partial<NGO>) {
               men: beneficiary.men,
               women: beneficiary.women,
               young: beneficiary.young,
+              kids: beneficiary.kids,
+              pregnant_women: beneficiary.pregnant_women,
+              lactating_women: beneficiary.lactating_women,
+              teachers: beneficiary.teachers,
+              students: beneficiary.students,
+              legal_entities: beneficiary.legal_entities,
+              child_before_preschool_age: beneficiary.child_before_preschool_age,
+              preschool_age_child: beneficiary.preschool_age_child,
+              school_age_child: beneficiary.school_age_child,
               disabled: beneficiary.disabled,
               other_vulnerable: beneficiary.other_vulnerable
             })));

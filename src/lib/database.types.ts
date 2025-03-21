@@ -39,7 +39,7 @@ export interface Database {
         Row: {
           id: string
           name: string
-          status: 'association' | 'ngo' | 'foundation' | 'public_utility' | 'gie' | 'cooperative' | 'other'
+          status: 'association' | 'ngo' | 'foundation' | 'public_utility' | 'gie' | 'cooperative' | 'responsible_entity' | 'other'
           other_status: string | null
           category: 'think_tank' | 'citizen_movement' | 'religious' | 'responsible_business' | 'nonprofit' | 'sports_cultural' | 'community_org' | 'foreign_assoc' | 'social_enterprise' | 'other' | null
           other_category: string | null
@@ -61,7 +61,7 @@ export interface Database {
         Insert: {
           id?: string
           name: string
-          status: 'association' | 'ngo' | 'foundation' | 'public_utility' | 'gie' | 'cooperative' | 'other'
+          status: 'association' | 'ngo' | 'foundation' | 'public_utility' | 'gie' | 'cooperative' | 'responsible_entity' | 'other'
           other_status?: string | null
           category?: 'think_tank' | 'citizen_movement' | 'religious' | 'responsible_business' | 'nonprofit' | 'sports_cultural' | 'community_org' | 'foreign_assoc' | 'social_enterprise' | 'other' | null
           other_category?: string | null
@@ -83,7 +83,7 @@ export interface Database {
         Update: {
           id?: string
           name?: string
-          status?: 'association' | 'ngo' | 'foundation' | 'public_utility' | 'gie' | 'cooperative' | 'other'
+          status?: 'association' | 'ngo' | 'foundation' | 'public_utility' | 'gie' | 'cooperative' | 'responsible_entity' | 'other'
           other_status?: string | null
           category?: 'think_tank' | 'citizen_movement' | 'religious' | 'responsible_business' | 'nonprofit' | 'sports_cultural' | 'community_org' | 'foreign_assoc' | 'social_enterprise' | 'other' | null
           other_category?: string | null

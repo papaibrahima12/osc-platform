@@ -13,7 +13,7 @@ export interface Profile {
 export interface NGO {
   id: string;
   name: string;
-  status: 'association' | 'ngo' | 'foundation' | 'public_utility' | 'gie' | 'cooperative' | 'other';
+  status: 'association' | 'ngo' | 'foundation' | 'public_utility' | 'gie' | 'cooperative' | 'responsible_entity' | 'other';
   other_status?: string;
   category?: 'think_tank' | 'citizen_movement' | 'religious' | 'responsible_business' | 'nonprofit' | 'sports_cultural' | 'community_org' | 'foreign_assoc' | 'social_enterprise' | 'other';
   other_category?: string;
@@ -118,6 +118,15 @@ export interface NGOBeneficiary {
   men: number;
   women: number;
   young: number;
+  kids: number;
+  pregnant_women: number;
+  lactating_women: number;
+  teachers: number;
+  students: number;
+  legal_entities: number;
+  preschool_age_child: number;
+  school_age_child: number;
+  child_before_preschool_age: number;
   disabled: number;
   other_vulnerable: number;
   created_at?: string;

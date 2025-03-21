@@ -68,6 +68,15 @@ function BeneficiariesStep({ data, activitySectors, onChange }: BeneficiariesSte
         men: 0,
         women: 0,
         young: 0,
+        kids: 0,
+        pregnant_women: 0,
+        lactating_women: 0,
+        teachers: 0,
+        students: 0,
+        legal_entities: 0,
+        preschool_age_child: 0,
+        school_age_child: 0,
+        child_before_preschool_age: 0,
         disabled: 0,
         other_vulnerable: 0
       };
@@ -109,7 +118,7 @@ function BeneficiariesStep({ data, activitySectors, onChange }: BeneficiariesSte
           [sector]: ''
         });
       }
-    } else if (field === 'young' || field === 'disabled' || field === 'other_vulnerable') {
+    } else if (field === 'young' || field === 'disabled' || field === 'other_vulnerable' || field === 'kids' || field === 'pregnant_women' || field === 'lactating_women' || field === 'students' || field === 'teachers' || field === 'legal_entities' || field === 'preschool_age_child' || field === 'child_before_preschool_age' || field === 'school_age_child') {
       if (numValue > newBeneficiary.total) {
         setErrors({
           ...errors,
@@ -124,7 +133,6 @@ function BeneficiariesStep({ data, activitySectors, onChange }: BeneficiariesSte
       }
     }
 
-    // Update the data
     const newData = [...data.filter(b => b.sector !== sector)];
     if (Object.values(newBeneficiary).some(v => v > 0)) {
       newData.push(newBeneficiary as NGOBeneficiary);
@@ -142,6 +150,15 @@ function BeneficiariesStep({ data, activitySectors, onChange }: BeneficiariesSte
       men: 0,
       women: 0,
       young: 0,
+      kids: 0,
+      pregnant_women: 0,
+      lactating_women: 0,
+      teachers: 0,
+      students: 0,
+      legal_entities: 0,
+      preschool_age_child: 0,
+      school_age_child: 0,
+      child_before_preschool_age: 0,
       disabled: 0,
       other_vulnerable: 0
     };
@@ -203,11 +220,128 @@ function BeneficiariesStep({ data, activitySectors, onChange }: BeneficiariesSte
               Jeunes (-35 ans)
             </label>
             <input
-              type="number"
-              min="0"
-              value={beneficiary.young}
-              onChange={(e) => handleInputChange(sector, 'young', e.target.value)}
-              className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-blue-500"
+                type="number"
+                min="0"
+                value={beneficiary.young}
+                onChange={(e) => handleInputChange(sector, 'young', e.target.value)}
+                className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-blue-500"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Enfants
+            </label>
+            <input
+                type="number"
+                min="0"
+                value={beneficiary.kids}
+                onChange={(e) => handleInputChange(sector, 'kids', e.target.value)}
+                className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-blue-500"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Femmes Enceintes
+            </label>
+            <input
+                type="number"
+                min="0"
+                value={beneficiary.pregnant_women}
+                onChange={(e) => handleInputChange(sector, 'pregnant_women', e.target.value)}
+                className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-blue-500"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Femmes Allaitantes
+            </label>
+            <input
+                type="number"
+                min="0"
+                value={beneficiary.lactating_women}
+                onChange={(e) => handleInputChange(sector, 'lactating_women', e.target.value)}
+                className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-blue-500"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Enseignants
+            </label>
+            <input
+                type="number"
+                min="0"
+                value={beneficiary.teachers}
+                onChange={(e) => handleInputChange(sector, 'teachers', e.target.value)}
+                className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-blue-500"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Elèves
+            </label>
+            <input
+                type="number"
+                min="0"
+                value={beneficiary.students}
+                onChange={(e) => handleInputChange(sector, 'students', e.target.value)}
+                className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-blue-500"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Entités Morales
+            </label>
+            <input
+                type="number"
+                min="0"
+                value={beneficiary.legal_entities}
+                onChange={(e) => handleInputChange(sector, 'legal_entities', e.target.value)}
+                className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-blue-500"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Enfants (0-36 mois)
+            </label>
+            <input
+                type="number"
+                min="0"
+                value={beneficiary.child_before_preschool_age}
+                onChange={(e) => handleInputChange(sector, 'child_before_preschool_age', e.target.value)}
+                className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-blue-500"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Enfants (3-6 ans)
+            </label>
+            <input
+                type="number"
+                min="0"
+                value={beneficiary.preschool_age_child}
+                onChange={(e) => handleInputChange(sector, 'preschool_age_child', e.target.value)}
+                className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-blue-500"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Enfants (7-15 ans)
+            </label>
+            <input
+                type="number"
+                min="0"
+                value={beneficiary.school_age_child}
+                onChange={(e) => handleInputChange(sector, 'school_age_child', e.target.value)}
+                className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-blue-500"
             />
           </div>
 
@@ -226,7 +360,7 @@ function BeneficiariesStep({ data, activitySectors, onChange }: BeneficiariesSte
 
           <div>
             <label className="block text-sm font-medium text-gray-700">
-              Autres groupes vulnérables
+              Autres
             </label>
             <input
               type="number"
@@ -266,13 +400,68 @@ function BeneficiariesStep({ data, activitySectors, onChange }: BeneficiariesSte
                 </p>
               </div>
               <div>
+                <p className="text-sm text-gray-500">Enfants</p>
+                <p className="text-lg font-semibold text-gray-900">
+                  {((beneficiary.kids / beneficiary.total) * 100).toFixed(1)}%
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">Femmes Enceintes</p>
+                <p className="text-lg font-semibold text-gray-900">
+                  {((beneficiary.pregnant_women / beneficiary.total) * 100).toFixed(1)}%
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">Femmes Allaitantes</p>
+                <p className="text-lg font-semibold text-gray-900">
+                  {((beneficiary.lactating_women / beneficiary.total) * 100).toFixed(1)}%
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">Enseignants</p>
+                <p className="text-lg font-semibold text-gray-900">
+                  {((beneficiary.teachers / beneficiary.total) * 100).toFixed(1)}%
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">Elèves</p>
+                <p className="text-lg font-semibold text-gray-900">
+                  {((beneficiary.students / beneficiary.total) * 100).toFixed(1)}%
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">Entités Morales</p>
+                <p className="text-lg font-semibold text-gray-900">
+                  {((beneficiary.legal_entities / beneficiary.total) * 100).toFixed(1)}%
+                </p>
+              </div>
+
+              <div>
+                <p className="text-sm text-gray-500">Enfants (0-36 mois)</p>
+                <p className="text-lg font-semibold text-gray-900">
+                  {((beneficiary.child_before_preschool_age / beneficiary.total) * 100).toFixed(1)}%
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">Enfants (3-6 ans)</p>
+                <p className="text-lg font-semibold text-gray-900">
+                  {((beneficiary.preschool_age_child / beneficiary.total) * 100).toFixed(1)}%
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">Enfants (7-15 ans)</p>
+                <p className="text-lg font-semibold text-gray-900">
+                  {((beneficiary.school_age_child / beneficiary.total) * 100).toFixed(1)}%
+                </p>
+              </div>
+              <div>
                 <p className="text-sm text-gray-500">Handicapés</p>
                 <p className="text-lg font-semibold text-gray-900">
                   {((beneficiary.disabled / beneficiary.total) * 100).toFixed(1)}%
                 </p>
               </div>
               <div>
-                <p className="text-sm text-gray-500">Autres vulnérables</p>
+                <p className="text-sm text-gray-500">Autres</p>
                 <p className="text-lg font-semibold text-gray-900">
                   {((beneficiary.other_vulnerable / beneficiary.total) * 100).toFixed(1)}%
                 </p>
@@ -321,8 +510,17 @@ function BeneficiariesStep({ data, activitySectors, onChange }: BeneficiariesSte
                       <div className="mt-2 text-sm text-gray-500">
                         <p>H: {beneficiary.men} / F: {beneficiary.women}</p>
                         <p>Jeunes: {beneficiary.young}</p>
+                        <p>Enfants: {beneficiary.kids}</p>
+                        <p>Femmes Enceintes: {beneficiary.pregnant_women}</p>
+                        <p>Femmes Allaitantes: {beneficiary.lactating_women}</p>
+                        <p>Enseignants: {beneficiary.teachers}</p>
+                        <p>Elèves: {beneficiary.students}</p>
+                        <p>Entités morales: {beneficiary.legal_entities}</p>
+                        <p>Enfants (0-36 mois): {beneficiary.child_before_preschool_age}</p>
+                        <p>Enfants (3-6 ans): {beneficiary.preschool_age_child}</p>
+                        <p>Enfants (7-15 ans): {beneficiary.school_age_child}</p>
                         <p>Handicapés: {beneficiary.disabled}</p>
-                        <p>Autres vulnérables: {beneficiary.other_vulnerable}</p>
+                        <p>Autres: {beneficiary.other_vulnerable}</p>
                       </div>
                     </div>
                   );

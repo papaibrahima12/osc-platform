@@ -19,6 +19,7 @@ const NATIONAL_FUNDING_SOURCES = [
 
 // Ajouter la liste des pays UE
 const EU_COUNTRIES = [
+  { id: 'ue', label: 'Union Européenne' },
   { id: 'france', label: 'France' },
   { id: 'germany', label: 'Allemagne' },
   { id: 'italy', label: 'Italie' },

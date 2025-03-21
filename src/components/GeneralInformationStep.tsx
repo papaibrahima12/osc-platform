@@ -3,7 +3,7 @@ import type { NGO } from '../types/user';
 
 interface FormData {
   name: string;
-  status: 'association' | 'ngo' | 'foundation' | 'public_utility' | 'gie' | 'cooperative' | 'other';
+  status: 'association' | 'ngo' | 'foundation' | 'public_utility' | 'gie' | 'responsible_entity' | 'cooperative' | 'other';
   otherStatus?: string;
   category?: 'think_tank' | 'citizen_movement' | 'religious' | 'responsible_business' | 'nonprofit' | 'sports_cultural' | 'community_org' | 'foreign_assoc' | 'social_enterprise' | 'other';
   otherCategory?: string;
@@ -60,7 +60,6 @@ export default function GeneralInformationStep({ data, onChange }: GeneralInform
   }>({});
 
   const validateYear = (year: string, field: 'creationYear' | 'approvalYear'): boolean => {
-    // Vérifier que c'est un nombre à 4 chiffres et ne dépasse pas 2025
     const yearRegex = /^\d{4}$/;
     if (!yearRegex.test(year)) {
       setYearErrors(prev => ({ ...prev, [field]: "L'année doit être composée de 4 chiffres" }));
@@ -84,21 +83,17 @@ export default function GeneralInformationStep({ data, onChange }: GeneralInform
       }
     }
 
-    // Effacer l'erreur si la validation est réussie
     setYearErrors(prev => ({ ...prev, [field]: undefined }));
     return true;
   };
 
-  // Handle file selection
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      // Check file type
       if (!file.type.match('application/pdf')) {
         alert('Veuillez sélectionner un fichier PDF');
         return;
       }
-      // Check file size (max 5MB)
       if (file.size > 5 * 1024 * 1024) {
         alert('Le fichier ne doit pas dépasser 5MB');
         return;
@@ -107,7 +102,6 @@ export default function GeneralInformationStep({ data, onChange }: GeneralInform
     }
   };
 
-  // Helper function to determine if organization type needs international scale
   const needsInternationalScale = (status: string) => {
     return ['ngo', 'foundation', 'public_utility'].includes(status);
   };
@@ -115,7 +109,6 @@ export default function GeneralInformationStep({ data, onChange }: GeneralInform
   const handleAddressChange = async (address: string) => {
     onChange({ address });
 
-    // Don't geocode empty addresses or very short ones
     if (address.length < 5) return;
 
     setGeocoding(true);
@@ -138,10 +131,8 @@ export default function GeneralInformationStep({ data, onChange }: GeneralInform
   };
 
   const handleYearChange = (year: string, field: 'creationYear' | 'approvalYear') => {
-    // Permettre la saisie même si invalide pour ne pas bloquer l'utilisateur
     onChange({ [field]: year });
 
-    // Valider l'année
     validateYear(year, field);
   };
 
@@ -150,7 +141,6 @@ export default function GeneralInformationStep({ data, onChange }: GeneralInform
         <div>
           <h3 className="text-lg font-medium text-gray-900 mb-4">Informations de l'organisation</h3>
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-            {/* Organization Name */}
             <div className="md:col-span-2">
               <label htmlFor="name" className="block text-sm font-medium text-gray-700">
                 Nom de l'organisation <span className="text-red-500">*</span>
@@ -166,7 +156,6 @@ export default function GeneralInformationStep({ data, onChange }: GeneralInform
               />
             </div>
 
-            {/* Status */}
             <div>
               <label htmlFor="status" className="block text-sm font-medium text-gray-700">
                 Statut <span className="text-red-500">*</span>
@@ -176,9 +165,7 @@ export default function GeneralInformationStep({ data, onChange }: GeneralInform
                   value={data.status}
                   onChange={(e) => onChange({
                     status: e.target.value as NGO['status'],
-                    // Reset category when changing status
                     category: undefined,
-                    // Reset scale when changing status
                     scale: undefined
                   })}
                   className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-blue-500"
@@ -191,6 +178,7 @@ export default function GeneralInformationStep({ data, onChange }: GeneralInform
                 <option value="public_utility">Organisation d'utilité publique</option>
                 <option value="gie">GIE</option>
                 <option value="cooperative">Coopérative</option>
+                <option value="responsible_entity">Association Entreprenante Responsable</option>
                 <option value="other">Autres</option>
               </select>
             </div>

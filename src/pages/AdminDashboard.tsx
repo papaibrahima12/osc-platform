@@ -11,6 +11,7 @@ import NGODetails from './NGODetails';
 import Reports from './Reports';
 import { useDemoStore } from '../store/demo';
 import { useAuthStore } from '../store/auth';
+import AgreementsDoc from "./AgreementsDoc.tsx";
 
 function renderStatCard({ title, value, icon: Icon, color }: { title: string; value: string | number; icon: any; color: string }) {
   return (
@@ -350,6 +351,8 @@ export default function AdminDashboard() {
             <Route path="ngos" element={<NGOs />} />
             <Route path="ngos/new" element={<CreateNGO />} />
             <Route path="ngos/:id" element={<NGODetails />} />
+            <Route path="agreements" element={<AgreementsDoc />} />
+            <Route path="investments_plans" element={<AgreementsDoc />} />
             <Route path="reports" element={<Reports />} />
             {user.role === 'super_admin' && (
               <>

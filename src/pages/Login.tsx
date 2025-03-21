@@ -72,8 +72,8 @@
           </div>
 
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-gray-900">Plateforme des OSC</h1>
-            <p className="text-blue-600 font-medium mt-1">du Sénégal</p>
+            <h1 className="text-2xl font-bold text-blue-600">e_OSC</h1>
+            <p className="text-black text-lg font-semibold italic mt-1">Système d'information et de suivi des OSC</p>
           </div>
 
           {error && (

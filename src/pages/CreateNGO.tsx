@@ -34,7 +34,7 @@ const steps = [
   { icon: Building2, label: 'Informations générales' },
   { icon: Users, label: 'Personnel' },
   { icon: MapPin, label: "Zones d'intervention" },
-  { icon: Activity, label: "Secteurs d'activité" },
+  { icon: Activity, label: "Projets" },
   { icon: Wallet, label: 'Investissement' },
   { icon: DollarSign, label: 'Source de financement' },
   { icon: Target, label: 'Bénéficiaires' },
@@ -42,9 +42,8 @@ const steps = [
 ];
 
 const initialFormData = {
-  // General Information
   name: '',
-  status: undefined as 'association' | 'ngo' | 'foundation' | 'public_utility' | 'gie' | 'cooperative' | 'other' | undefined,
+  status: undefined as 'association' | 'ngo' | 'foundation' | 'public_utility' | 'gie' | 'cooperative' | 'responsible_entity' | 'other' | undefined,
   otherStatus: '',
   category: undefined as 'think_tank' | 'citizen_movement' | 'religious' | 'responsible_business' | 'nonprofit' | 'sports_cultural' | 'community_org' | 'foreign_assoc' | 'social_enterprise' | 'other' | undefined,
   otherCategory: '',
