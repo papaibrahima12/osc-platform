@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import  { useState } from 'react';
 import type { NGOBeneficiary, NGOActivitySector } from '../types/user';
 
 interface BeneficiariesStepProps {
@@ -68,7 +68,6 @@ function BeneficiariesStep({ data, activitySectors, onChange }: BeneficiariesSte
         men: 0,
         women: 0,
         young: 0,
-        kids: 0,
         pregnant_women: 0,
         lactating_women: 0,
         teachers: 0,
@@ -92,13 +91,13 @@ function BeneficiariesStep({ data, activitySectors, onChange }: BeneficiariesSte
         newBeneficiary.men = 0;
         newBeneficiary.women = 0;
       }
-      if (numValue < newBeneficiary.young) {
+      if (numValue < newBeneficiary?.young) {
         newBeneficiary.young = 0;
       }
-      if (numValue < newBeneficiary.disabled) {
+      if (numValue < newBeneficiary?.disabled) {
         newBeneficiary.disabled = 0;
       }
-      if (numValue < newBeneficiary.other_vulnerable) {
+      if (numValue < newBeneficiary?.other_vulnerable) {
         newBeneficiary.other_vulnerable = 0;
       }
       setErrors({});
@@ -118,7 +117,7 @@ function BeneficiariesStep({ data, activitySectors, onChange }: BeneficiariesSte
           [sector]: ''
         });
       }
-    } else if (field === 'young' || field === 'disabled' || field === 'other_vulnerable' || field === 'kids' || field === 'pregnant_women' || field === 'lactating_women' || field === 'students' || field === 'teachers' || field === 'legal_entities' || field === 'preschool_age_child' || field === 'child_before_preschool_age' || field === 'school_age_child') {
+    } else if (field === 'young' || field === 'disabled' || field === 'other_vulnerable' || field === 'pregnant_women' || field === 'lactating_women' || field === 'students' || field === 'teachers' || field === 'legal_entities' || field === 'preschool_age_child' || field === 'child_before_preschool_age' || field === 'school_age_child') {
       if (numValue > newBeneficiary.total) {
         setErrors({
           ...errors,
@@ -150,7 +149,6 @@ function BeneficiariesStep({ data, activitySectors, onChange }: BeneficiariesSte
       men: 0,
       women: 0,
       young: 0,
-      kids: 0,
       pregnant_women: 0,
       lactating_women: 0,
       teachers: 0,
@@ -224,19 +222,6 @@ function BeneficiariesStep({ data, activitySectors, onChange }: BeneficiariesSte
                 min="0"
                 value={beneficiary.young}
                 onChange={(e) => handleInputChange(sector, 'young', e.target.value)}
-                className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-blue-500"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Enfants
-            </label>
-            <input
-                type="number"
-                min="0"
-                value={beneficiary.kids}
-                onChange={(e) => handleInputChange(sector, 'kids', e.target.value)}
                 className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-blue-500"
             />
           </div>
@@ -400,12 +385,6 @@ function BeneficiariesStep({ data, activitySectors, onChange }: BeneficiariesSte
                 </p>
               </div>
               <div>
-                <p className="text-sm text-gray-500">Enfants</p>
-                <p className="text-lg font-semibold text-gray-900">
-                  {((beneficiary.kids / beneficiary.total) * 100).toFixed(1)}%
-                </p>
-              </div>
-              <div>
                 <p className="text-sm text-gray-500">Femmes Enceintes</p>
                 <p className="text-lg font-semibold text-gray-900">
                   {((beneficiary.pregnant_women / beneficiary.total) * 100).toFixed(1)}%
@@ -510,7 +489,6 @@ function BeneficiariesStep({ data, activitySectors, onChange }: BeneficiariesSte
                       <div className="mt-2 text-sm text-gray-500">
                         <p>H: {beneficiary.men} / F: {beneficiary.women}</p>
                         <p>Jeunes: {beneficiary.young}</p>
-                        <p>Enfants: {beneficiary.kids}</p>
                         <p>Femmes Enceintes: {beneficiary.pregnant_women}</p>
                         <p>Femmes Allaitantes: {beneficiary.lactating_women}</p>
                         <p>Enseignants: {beneficiary.teachers}</p>

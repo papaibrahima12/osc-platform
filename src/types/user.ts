@@ -118,7 +118,6 @@ export interface NGOBeneficiary {
   men: number;
   women: number;
   young: number;
-  kids: number;
   pregnant_women: number;
   lactating_women: number;
   teachers: number;

@@ -305,7 +305,6 @@ export type Database = {
           men: number
           women: number
           young: number
-          kids: number
           pregnant_women: number
           lactating_women: number
           teachers: number

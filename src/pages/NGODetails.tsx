@@ -983,7 +983,6 @@ function NGODetails() {
                       <p className="text-gray-600">Hommes: <span className="font-medium">{beneficiary.men}</span></p>
                       <p className="text-gray-600">Femmes: <span className="font-medium">{beneficiary.women}</span></p>
                       <p className="text-gray-600">Jeunes: <span className="font-medium">{beneficiary.young}</span></p>
-                      <p className="text-gray-600">Enfants: <span className="font-medium">{beneficiary.kids}</span></p>
                       <p className="text-gray-600">Femmes Enceintes: <span className="font-medium">{beneficiary.pregnant_women || 0}</span></p>
                       <p className="text-gray-600">Femmes Allaitantes: <span className="font-medium">{beneficiary.lactating_women || 0}</span></p>
                       <p className="text-gray-600">Enseignants: <span className="font-medium">{beneficiary.teachers || 0}</span></p>
