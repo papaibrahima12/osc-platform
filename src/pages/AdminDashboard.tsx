@@ -61,7 +61,7 @@ function DashboardHome() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Tableau de bord</h1>
+        <h1 className="text-2xl pt-4 font-bold text-gray-900">Tableau de bord</h1>
         <p className="mt-1 text-gray-500">Vue d'ensemble de la plateforme</p>
       </div>
 

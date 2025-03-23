@@ -18,17 +18,17 @@ export default function Sidebar({ role }: SidebarProps) {
 
   return (
     <div className="w-64 bg-white h-screen fixed left-0 top-0 border-r border-gray-200">
-      <div className="p-6 border-b border-gray-100">
-        <div className="flex items-center space-x-3">
-          <div className="bg-gradient-to-br from-blue-500 to-blue-600 p-2 rounded-lg">
-            <Globe2 className="w-8 h-8 text-white" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold text-blue-600">e_OSC</h1>
-            <p className="text-sm font-medium text-gray-900">Sénégal</p>
-          </div>
-        </div>
-      </div>
+      {/*<div className="p-6 border-b border-gray-100">*/}
+      {/*  <div className="flex items-center space-x-3">*/}
+      {/*    <div className="bg-gradient-to-br from-blue-500 to-blue-600 p-2 rounded-lg">*/}
+      {/*      <Globe2 className="w-8 h-8 text-white" />*/}
+      {/*    </div>*/}
+      {/*    <div>*/}
+      {/*      <h1 className="text-2xl font-bold text-blue-600">e_OSC</h1>*/}
+      {/*      <p className="text-sm font-medium text-gray-900">Sénégal</p>*/}
+      {/*    </div>*/}
+      {/*  </div>*/}
+      {/*</div>*/}
 
       <nav className="mt-8 px-4 space-y-2">
         <NavLink to="/" className={linkClass} end>
