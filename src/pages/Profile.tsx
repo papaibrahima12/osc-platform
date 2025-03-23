@@ -10,7 +10,7 @@ export default function Profile() {
   const managedOSC = ngos.find(ngo => ngo.manager_id === user?.id);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pt-4">
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Paramètres du profil</h1>
         <p className="text-gray-500 mt-1">Gérez vos informations personnelles</p>
