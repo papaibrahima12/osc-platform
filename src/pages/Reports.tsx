@@ -36,6 +36,7 @@ export default function Reports() {
         : name === 'public_utility' ? 'Utilité publique'
         : name === 'gie' ? 'GIE'
         : name === 'cooperative' ? 'Coopérative'
+        : name === 'responsible_entity' ? 'Association Entreprenante Responsable'
         : name,
       value
     }));
