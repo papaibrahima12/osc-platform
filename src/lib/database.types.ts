@@ -14,6 +14,7 @@ export interface Database {
           id: string
           first_name: string
           last_name: string
+          email: string
           role: 'admin' | 'ngo_manager'
           created_at: string
           updated_at: string
@@ -22,6 +23,7 @@ export interface Database {
           id: string
           first_name: string
           last_name: string
+          email: string
           role?: 'admin' | 'ngo_manager'
           created_at?: string
           updated_at?: string
@@ -30,6 +32,7 @@ export interface Database {
           id?: string
           first_name?: string
           last_name?: string
+          email?: string
           role?: 'admin' | 'ngo_manager'
           created_at?: string
           updated_at?: string

@@ -29,6 +29,7 @@ import {
   NGOInterventionZone,
   NGOInvestment, NGORealization
 } from "../types/user.ts";
+import {useAuthStore} from "../store/auth.ts";
 
 const steps = [
   { icon: Building2, label: 'Informations générales' },
@@ -59,6 +60,7 @@ const initialFormData = {
   twitter: '',
   creationYear: '',
   approvalYear: '',
+  manager_id: '',
   agreementDocument: undefined as File | undefined,
   contactFirstName: '',
   contactLastName: '',
@@ -97,16 +99,15 @@ const STEP_STORAGE_KEY = 'ngo_create_current_step';
 
 export default function CreateNGO() {
   const navigate = useNavigate();
+  const { user } = useAuthStore();
   const [selectedFileName, setSelectedFileName] = useState<string | null>(null);
   const formContainerRef = useRef<HTMLDivElement>(null);
   const [currentStep, setCurrentStep] = useState(() => {
-        // Récupérer l'étape sauvegardée ou utiliser la première étape
         const savedStep = localStorage.getItem(STEP_STORAGE_KEY);
         return savedStep ? parseInt(savedStep, 10) : 1;
   });
 
   const [formData, setFormData] = useState(() => {
-        // Récupérer les données sauvegardées ou utiliser les données initiales
         const savedData = localStorage.getItem(FORM_STORAGE_KEY);
         if (savedData) {
             try {
@@ -136,13 +137,13 @@ export default function CreateNGO() {
     }, [formData, currentStep]);
 
   const handleFormUpdate = (updates: Partial<typeof initialFormData>) => {
-    setFormData((prev) => ({ ...prev, ...updates }));
+    setFormData((prev: typeof initialFormData) => ({ ...prev, ...updates }));
     setError(null);
   };
 
   const handleActivityYearChange = (year: string) => {
     if (formData.financial_resources.length > 0) {
-      const updatedResources = formData.financial_resources.map(resource => ({
+      const updatedResources = formData.financial_resources.map((resource: NGOFinancialResource) => ({
         ...resource,
         funding_year: year
       }));
@@ -172,7 +173,6 @@ export default function CreateNGO() {
     if (!data.contactEmail) errors.push("L'email du contact est requis");
     if (!data.contactPhone) errors.push('Le téléphone du contact est requis');
 
-    // Check if email already exists
     if (ngos.some(ngo => ngo.email === data.email)) {
       errors.push('Cette adresse email est déjà utilisée');
     }
@@ -209,11 +209,9 @@ export default function CreateNGO() {
       errors.push("Au moins une zone d'intervention doit être sélectionnée");
     }
 
-    // Vérifier la cohérence des zones
     const hasDepartment = zones.some(zone => zone.zone_type === 'department');
     const hasMunicipality = zones.some(zone => zone.zone_type === 'municipality');
 
-    // Si on a un département, on doit avoir sa région parente
     if (hasDepartment) {
       const departments = zones.filter(zone => zone.zone_type === 'department');
       for (const dept of departments) {
@@ -226,7 +224,6 @@ export default function CreateNGO() {
       }
     }
 
-    // Si on a une municipalité, on doit avoir son département parent
     if (hasMunicipality) {
       const municipalities = zones.filter(zone => zone.zone_type === 'municipality');
       for (const mun of municipalities) {
@@ -239,7 +236,6 @@ export default function CreateNGO() {
       }
     }
 
-    // Vérifier que si on a des zones au Sénégal, le pays est sélectionné
     const hasSenegalZones = zones.some(zone =>
         zone.zone_type === 'region' ||
         zone.zone_type === 'department' ||
@@ -432,7 +428,6 @@ export default function CreateNGO() {
   const validateFormBeforeSubmit = () => {
     const errors: string[] = [];
 
-    // Validate required fields in General Information
     if (!formData.name) errors.push('Le nom est requis');
     if (!formData.status) errors.push('Le statut est requis');
     if (formData.status === 'other' && !formData.otherStatus) errors.push('Précisez le statut');
@@ -441,7 +436,6 @@ export default function CreateNGO() {
     if (!formData.email) errors.push("L'email est requis");
     if (!formData.phone) errors.push('Le téléphone est requis');
 
-    // Validation de l'année de création
     if (!formData.creationYear) {
       errors.push('La date de création est requise');
     } else {
@@ -453,7 +447,6 @@ export default function CreateNGO() {
       }
     }
 
-    // Validation de l'année d'agrément pour les ONG
     if (formData.status === 'ngo') {
       if (!formData.approvalYear) {
         errors.push("L'année d'agrément est requise");
@@ -471,12 +464,10 @@ export default function CreateNGO() {
       }
     }
 
-    // Check if email already exists
     if (ngos.some(n => n.email === formData.email)) {
       errors.push('Cette adresse email est déjà utilisée');
     }
 
-    // Validation des années dans les autres étapes
     if (formData.activity_sectors.length > 0) {
       const activityYear = formData.activity_sectors[0].activity_year;
       const yearRegex = /^\d{4}$/;
@@ -506,7 +497,6 @@ export default function CreateNGO() {
         errors.push("L'année de financement ne peut pas dépasser 2025");
       }
 
-      // Vérifier que l'année de financement est la même que l'année d'activité
       if (formData.activity_sectors.length > 0) {
         const activityYear = formData.activity_sectors[0].activity_year;
         if (fundingYear !== activityYear) {
@@ -522,18 +512,15 @@ export default function CreateNGO() {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     
-    // Validate current step
     if (!validateCurrentStep()) {
       return;
     }
 
-    // If not on the last step, just move to next step
     if (currentStep < steps.length) {
       handleNext();
       return;
     }
 
-    // Only validate and show confirmation dialog on final submit
     const errors = validateFormBeforeSubmit();
     if (errors.length > 0) {
       setError(errors.join('\n'));
@@ -541,7 +528,6 @@ export default function CreateNGO() {
       return;
     }
     
-    // Only show confirmation dialog on final submit
     if (!window.confirm('Voulez-vous vraiment créer cette OSC ?')) {
       return;
     }
@@ -556,9 +542,7 @@ export default function CreateNGO() {
         toast.error('"Les années d\'activité, d\'investissement doivent être identiques"');
         throw new Error("Les années d'activité, d'investissement doivent être identiques");
       }
-      // Prepare data for submission
       const ngoData = {
-        // General Information
         name: formData.name,
         status: formData.status,
         other_status: formData.otherStatus,
@@ -575,6 +559,7 @@ export default function CreateNGO() {
         twitter: formData.twitter,
         creation_year: formData.creationYear,
         approval_year: formData.approvalYear,
+        manager_id: user?.id,
         contact_first_name: formData.contactFirstName,
         contact_last_name: formData.contactLastName,
         contact_email: formData.contactEmail,
@@ -582,33 +567,29 @@ export default function CreateNGO() {
         is_active: true,
         agreementDocument: formData.agreementDocument,
 
-        // Staff Information
         staff: formData.staff,
 
-        // Activity Sectors
-        activity_sectors: formData.activity_sectors.map(sector => ({
+        activity_sectors: formData.activity_sectors.map((sector: NGOActivitySector) => ({
           activity_year: sector.activity_year,
           sector: sector.sector,
           subsector: sector.subsector,
           activity_count: sector.activity_count
         })),
-        // Intervention Zones
-        intervention_zones: formData.intervention_zones.map(zone => ({
+
+        intervention_zones: formData.intervention_zones.map((zone: NGOInterventionZone) => ({
           zone_type: zone.zone_type,
           name: zone.name,
           parent_zone_id: zone.parent_zone_id
         })),
 
-        // Investments
-        investments: formData.investments.map(investment => ({
+        investments: formData.investments.map((investment: NGOInvestment) => ({
           investment_year: investment.investment_year,
           sector: investment.sector,
           subsector: investment.subsector,
           amount: investment.amount
         })),
 
-        // Financial Resources
-        financial_resources: formData.financial_resources.map(resource => ({
+        financial_resources: formData.financial_resources.map((resource: NGOFinancialResource) => ({
           funding_year: resource.funding_year,
           funding_type: resource.funding_type,
           funding_source: resource.funding_source,
@@ -616,21 +597,19 @@ export default function CreateNGO() {
           details: resource.details
         })),
 
-        // Beneficiaries
         beneficiaries: formData.beneficiaries,
 
-        // Realizations
         realizations: formData.realizations
       };
 
-      // Create NGO with all related data
       await addNGO(ngoData);
       toast.success('OSC créée avec succès');
       localStorage.removeItem(FORM_STORAGE_KEY);
       localStorage.removeItem(STEP_STORAGE_KEY);
+      if (user?.role === 'ngo_manager')  navigate('/my-osc');
       navigate('/ngos');
     } catch (error) {
-      const errorMessage = error.message || 'Une erreur est survenue lors de la création de l\'OSC.';
+      const errorMessage = error instanceof Error ? error.message : 'Une erreur est survenue lors de la création de l\'OSC.';
       setError(errorMessage);
       toast.error(errorMessage);
     } finally {

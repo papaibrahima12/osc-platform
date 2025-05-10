@@ -38,10 +38,10 @@ export default function CreateAdmin() {
 
     try {
       await createUser(email, {
+        updated_at: new Date().toISOString(),
         first_name: firstName,
         last_name: lastName,
-        role: 'admin',
-        email: email
+        role: 'admin'
       });
 
       toast.success('Administrateur créé avec succès. Un email avec les identifiants a été envoyé.', {
@@ -51,11 +51,11 @@ export default function CreateAdmin() {
 
       // Rediriger vers la liste des administrateurs
       navigate('/admins');
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error creating admin:', err);
-      const errorMessage = err.message === 'Un utilisateur avec cet email existe déjà' 
+        const errorMessage = err instanceof Error && err.message === 'Un utilisateur avec cet email existe déjà'
         ? 'Cette adresse email existe déjà'
-        : err.message || 'Une erreur est survenue lors de la création de l\'administrateur';
+        : err instanceof Error ? err.message : 'Une erreur est survenue lors de la création de l\'administrateur';
       
       setError(errorMessage);
       toast.error(errorMessage, {
@@ -68,7 +68,7 @@ export default function CreateAdmin() {
 
   return (
     <div className="space-y-6">
-      <div>
+      <div className="mt-5">
         <h1 className="text-2xl font-bold text-gray-900">Nouvel Administrateur</h1>
         <p className="text-gray-500 mt-1">Créer un nouveau compte administrateur</p>
       </div>
@@ -130,7 +130,7 @@ export default function CreateAdmin() {
               <h3 className="text-sm font-medium text-blue-900">Information</h3>
               <p className="mt-1 text-sm text-blue-700">
                 Un email contenant les identifiants de connexion sera envoyé à l'administrateur.
-                L'administrateur devra changer son mot de passe lors de sa première connexion.
+                L'administrateur peut éventuellement changer son mot de passe lors de sa première connexion.
               </p>
             </div>
 

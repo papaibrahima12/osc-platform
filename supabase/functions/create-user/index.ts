@@ -1,4 +1,4 @@
-import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.7'
 
 const corsHeaders = {
@@ -7,13 +7,11 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
 
   try {
-    // Get environment variables
     const supabaseUrl = Deno.env.get('SUPABASE_URL')
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
 
@@ -23,17 +21,14 @@ serve(async (req) => {
 
     const { email, userData } = await req.json()
 
-    // Validate required fields
     if (!email || !userData.first_name || !userData.last_name || !userData.role) {
       throw new Error('Tous les champs sont requis')
     }
 
-    // Validate email format
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       throw new Error('Format d\'email invalide')
     }
 
-    // Create a Supabase client with the service role key
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
       auth: {
         autoRefreshToken: false,
@@ -41,7 +36,6 @@ serve(async (req) => {
       }
     })
 
-    // Check if user already exists
     const { data: existingUser, error: existingUserError } = await supabaseAdmin
       .from('profiles')
       .select('id')
@@ -57,10 +51,8 @@ serve(async (req) => {
       throw new Error('Un utilisateur avec cet email existe déjà')
     }
 
-    // Use default password
     const defaultPassword = 'passer2025'
 
-    // Create auth user
     const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
       email,
       password: defaultPassword,
@@ -69,7 +61,7 @@ serve(async (req) => {
         first_name: userData.first_name,
         last_name: userData.last_name,
         role: userData.role,
-        force_password_change: true // Flag to force password change
+        force_password_change: true
       }
     })
 
@@ -85,7 +77,6 @@ serve(async (req) => {
       throw new Error('Erreur lors de la création du compte')
     }
 
-    // Create profile
     const { data: profile, error: profileError } = await supabaseAdmin
       .from('profiles')
       .insert({
@@ -101,16 +92,14 @@ serve(async (req) => {
       .single()
 
     if (profileError) {
-      // Rollback: delete the auth user if profile creation fails
       await supabaseAdmin.auth.admin.deleteUser(authData.user.id)
       console.error('Profile error:', profileError)
       throw new Error('Erreur lors de la création du profil')
     }
 
-    // Send welcome email with credentials
     try {
       await supabaseAdmin.functions.invoke('send-welcome-email', {
-        body: { 
+        body: {
           to: email,
           password: defaultPassword,
           firstName: userData.first_name
@@ -118,17 +107,16 @@ serve(async (req) => {
       })
     } catch (emailError) {
       console.error('Error sending welcome email:', emailError)
-      // Don't throw here, the user is still created successfully
     }
 
     return new Response(
-      JSON.stringify({ 
+      JSON.stringify({
         profile,
         message: 'Utilisateur créé avec succès'
       }),
       {
-        headers: { 
-          ...corsHeaders, 
+        headers: {
+          ...corsHeaders,
           'Content-Type': 'application/json'
         },
         status: 200,
@@ -137,12 +125,12 @@ serve(async (req) => {
   } catch (error: any) {
     console.error('Function error:', error)
     return new Response(
-      JSON.stringify({ 
+      JSON.stringify({
         error: error.message || 'Une erreur est survenue lors de la création de l\'utilisateur'
       }),
       {
-        headers: { 
-          ...corsHeaders, 
+        headers: {
+          ...corsHeaders,
           'Content-Type': 'application/json'
         },
         status: 400,

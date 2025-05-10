@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { 
-  Building2, Mail, Phone, Calendar, User, MapPin, Activity, Globe2, Users, 
-  Wallet, DollarSign, Award, Target, Link, Facebook, Linkedin, Twitter, Download,
-  Edit
+import {
+  Building2, Mail, Phone, Calendar, User, MapPin, Activity, Globe2, Users,
+  Award, Target, Link, Linkedin, Download,
+  Edit, Facebook
 } from 'lucide-react';
 import { useDemoStore } from '../store/demo';
 import { SECTORS } from '../components/ActivitySectorsStep';
 import { SECTORS_INDICATORS } from '../components/RealizationStep';
 import EditNGO from './EditNGO';
 
-function renderStatCard({ title, value, icon: Icon, color }: { title: string; value: string | number; icon: any; color: string }) {
+function renderStatCard({ title, value, icon: Icon, color }: { title: string; value: string | number; icon: React.ComponentType<{ className?: string }>; color: string }) {
   return (
     <div className={`bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow p-6`}>
       <div className="flex items-center justify-between">
@@ -68,7 +68,7 @@ function NGODetails() {
         <h2 className="text-2xl font-bold text-gray-900">OSC non trouvée</h2>
         <p className="mt-2 text-gray-600">L'OSC que vous recherchez n'existe pas.</p>
         <button
-          onClick={() => navigate('/ngos')}
+          onClick={() => navigate('/')}
           className="mt-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700"
         >
           Retour à la liste
@@ -84,7 +84,6 @@ function NGODetails() {
   const ngoActivities = activities.filter(activity => activity.ngo_id === ngo.id) || [];
   const staff = ngo.staff;
 
-  // Calculate totals
   const totalBeneficiaries = Object.values(ngo.beneficiaries || []).reduce((sum, data) => {
     return sum + (data.total || 0);
   }, 0);
@@ -106,12 +105,12 @@ function NGODetails() {
     return sum + (resource.amount || 0);
   }, 0);
 
-  // Group financial resources by type
   const groupedResources = (ngo.financial_resources || []).reduce((acc, resource) => {
-    if (!acc[resource.funding_type]) {
-      acc[resource.funding_type] = [];
+    const fundingType = resource.funding_type || 'unknown';
+    if (!acc[fundingType]) {
+      acc[fundingType] = [];
     }
-    acc[resource.funding_type].push(resource);
+    acc[fundingType].push(resource);
     return acc;
   }, {} as Record<string, typeof ngo.financial_resources>);
 

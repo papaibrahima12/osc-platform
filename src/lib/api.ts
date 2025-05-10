@@ -2,7 +2,6 @@ import { supabase } from './supabase';
 import type { NGO, Profile, Activity } from '../types/user';
 import toast from 'react-hot-toast';
 
-// Auth functions
 export async function signIn(email: string, password: string) {
   try {
     const { data, error } = await supabase.auth.signInWithPassword({
@@ -14,9 +13,9 @@ export async function signIn(email: string, password: string) {
     if (!data.user) throw new Error('Identifiants invalides');
     
     return { user: data.user };
-  } catch (error: any) {
+  } catch (error) {
     console.error('Sign in error:', error);
-    throw new Error(error.message || 'Erreur lors de la connexion');
+    throw new Error( error instanceof Error ? error.message : 'Erreur lors de la connexion');
   }
 }
 
@@ -52,9 +51,9 @@ export async function resetPassword(email: string) {
     });
     
     if (error) throw error;
-  } catch (error: any) {
+  } catch (error) {
     console.error('Reset password error:', error);
-    throw new Error(error.message || 'Erreur lors de la réinitialisation du mot de passe');
+    throw new Error(error instanceof Error ? error.message : 'Erreur lors de la réinitialisation du mot de passe');
   }
 }
 
@@ -78,9 +77,9 @@ export async function getProfile(id: string) {
     if (!data) throw new Error('Profil non trouvé');
     
     return data;
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error fetching profile:', error);
-    throw new Error(error.message || 'Erreur lors de la récupération du profil');
+    throw new Error(error instanceof Error ? error.message : 'Erreur lors de la récupération du profil');
   }
 }
 
@@ -106,36 +105,44 @@ export async function listUsers() {
   return data;
 }
 
+export async function listManagers() {
+    const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('role','ngo_manager')
+        .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    return data;
+}
+
 export async function createUser(email: string, userData: Partial<Profile>) {
   try {
-    // Validation des champs requis
     if (!email || !userData.first_name || !userData.last_name || !userData.role) {
       throw new Error('Tous les champs sont requis');
     }
 
-    // Validation du format email
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       throw new Error('Format d\'email invalide');
     }
 
-    // Vérifier si l'email existe déjà
     const { data: existingUser } = await supabase
       .from('profiles')
       .select('id')
       .eq('email', email)
       .maybeSingle();
 
-    if (existingUser) {
+      if (existingUser) {
       throw new Error('Cette adresse email existe déjà');
     }
 
-    // Utiliser la fonction Edge pour créer l'utilisateur
     const { data: response, error } = await supabase.functions.invoke('create-user', {
       body: { email, userData }
     });
 
+      console.log('response', response);
+
     if (error) {
-      // Si l'erreur vient de la fonction Edge
       if (error.message.includes('already exists')) {
         throw new Error('Cette adresse email existe déjà');
       }
@@ -147,9 +154,9 @@ export async function createUser(email: string, userData: Partial<Profile>) {
     }
 
     return response.profile;
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error creating user:', error);
-    throw new Error(error.message || 'Une erreur est survenue lors de la création de l\'utilisateur');
+    throw new Error(error instanceof Error ? error.message : 'Une erreur est survenue lors de la création de l\'utilisateur');
   }
 }
 
@@ -162,7 +169,6 @@ export async function listNGOs() {
 
   if (ngosError) throw ngosError;
 
-  // Fetch related data for each NGO
   const enrichedNGOs = await Promise.all(ngos.map(async (ngo) => {
     const [
       { data: staffData },
@@ -199,11 +205,11 @@ export async function listNGOs() {
   return enrichedNGOs;
 }
 
-export async function getNGO(id: string) {
+export async function getNGO(ngoId?: string) {
   const { data: ngo, error: ngoError } = await supabase
     .from('ngos')
     .select('*')
-    .eq('id', id)
+    .eq('id', ngoId)
     .single();
 
   if (ngoError) throw ngoError;
@@ -217,13 +223,13 @@ export async function getNGO(id: string) {
     { data: beneficiaries },
     { data: realizations }
   ] = await Promise.all([
-    supabase.from('ngo_staff').select('*').eq('ngo_id', id),
-    supabase.from('ngo_activity_sectors').select('*').eq('ngo_id', id),
-    supabase.from('ngo_intervention_zones').select('*').eq('ngo_id', id),
-    supabase.from('ngo_investments').select('*').eq('ngo_id', id),
-    supabase.from('ngo_financial_resources').select('*').eq('ngo_id', id),
-    supabase.from('ngo_beneficiaries').select('*').eq('ngo_id', id),
-    supabase.from('ngo_realizations').select('*').eq('ngo_id', id)
+    supabase.from('ngo_staff').select('*').eq('ngo_id', ngo.id),
+    supabase.from('ngo_activity_sectors').select('*').eq('ngo_id', ngo.id),
+    supabase.from('ngo_intervention_zones').select('*').eq('ngo_id', ngo.id),
+    supabase.from('ngo_investments').select('*').eq('ngo_id', ngo.id),
+    supabase.from('ngo_financial_resources').select('*').eq('ngo_id', ngo.id),
+    supabase.from('ngo_beneficiaries').select('*').eq('ngo_id', ngo.id),
+    supabase.from('ngo_realizations').select('*').eq('ngo_id', ngo.id)
   ]);
 
   const staff = staffData?.[0] || null;
@@ -240,6 +246,48 @@ export async function getNGO(id: string) {
   };
 }
 
+export async function getMyNGO(userId?: string) {
+    const { data: ngo, error: ngoError } = await supabase
+        .from('ngos')
+        .select('*')
+        .eq('manager_id', userId)
+        .single();
+
+    if (ngoError) throw ngoError;
+
+    const [
+        { data: staffData },
+        { data: sectors },
+        { data: zones },
+        { data: investments },
+        { data: resources },
+        { data: beneficiaries },
+        { data: realizations }
+    ] = await Promise.all([
+        supabase.from('ngo_staff').select('*').eq('ngo_id', ngo.id),
+        supabase.from('ngo_activity_sectors').select('*').eq('ngo_id', ngo.id),
+        supabase.from('ngo_intervention_zones').select('*').eq('ngo_id', ngo.id),
+        supabase.from('ngo_investments').select('*').eq('ngo_id', ngo.id),
+        supabase.from('ngo_financial_resources').select('*').eq('ngo_id', ngo.id),
+        supabase.from('ngo_beneficiaries').select('*').eq('ngo_id', ngo.id),
+        supabase.from('ngo_realizations').select('*').eq('ngo_id', ngo.id)
+    ]);
+
+    const staff = staffData?.[0] || null;
+
+    return {
+        ...ngo,
+        staff,
+        activity_sectors: sectors || [],
+        intervention_zones: zones || [],
+        investments: investments || [],
+        financial_resources: resources || [],
+        beneficiaries: beneficiaries || [],
+        realizations: realizations || []
+    };
+}
+
+
 export async function createNGO(data: Omit<NGO, 'id' | 'created_at' | 'updated_at'>) {
   const {
     staff,
@@ -254,7 +302,6 @@ export async function createNGO(data: Omit<NGO, 'id' | 'created_at' | 'updated_a
   } = data;
 
   try {
-    // Create the NGO
     const { data: ngo, error: ngoError } = await supabase
       .from('ngos')
       .insert({
@@ -267,17 +314,14 @@ export async function createNGO(data: Omit<NGO, 'id' | 'created_at' | 'updated_a
 
     if (ngoError) throw ngoError;
 
-    // Upload agreement document if provided
     let agreementUrl;
     if (agreementDocument && ngo.status === 'ngo') {
       try {
-        // Validate file type
         if (!agreementDocument.type.includes('pdf')) {
           toast.error('Le document doit être au format PDF');
           throw new Error('Le document doit être au format PDF');
         }
 
-        // Validate file size (5MB max)
         if (agreementDocument.size > 5 * 1024 * 1024) {
           toast.error('Le document ne doit pas dépasser 5MB');
           throw new Error('Le document ne doit pas dépasser 5MB');
@@ -299,16 +343,13 @@ export async function createNGO(data: Omit<NGO, 'id' | 'created_at' | 'updated_a
 
         agreementUrl = data.publicUrl;
       } catch (uploadError) {
-        // If document upload fails, delete the NGO
         await supabase.from('ngos').delete().eq('id', ngo.id);
         throw uploadError;
       }
     }
 
-    // Create related data
     const promises = [];
 
-    // Staff
     if (staff) {
       promises.push(
           supabase
@@ -317,7 +358,6 @@ export async function createNGO(data: Omit<NGO, 'id' | 'created_at' | 'updated_a
       );
     }
 
-    // Activity sectors
     if (activity_sectors?.length) {
       promises.push(
           supabase
@@ -332,9 +372,7 @@ export async function createNGO(data: Omit<NGO, 'id' | 'created_at' | 'updated_a
       );
     }
 
-    // Intervention zones
     if (intervention_zones?.length) {
-      // First insert countries and regions
       const countryAndRegionZones = intervention_zones.filter(
           zone => zone.zone_type === 'country' || zone.zone_type === 'region'
       );
@@ -352,7 +390,6 @@ export async function createNGO(data: Omit<NGO, 'id' | 'created_at' | 'updated_a
         if (zonesError) throw zonesError;
       }
 
-      // Then insert departments with their region parent IDs
       const departmentZones = intervention_zones.filter(zone => zone.zone_type === 'department');
       if (departmentZones.length) {
         // Get the inserted regions to map parent IDs
@@ -478,7 +515,6 @@ export async function createNGO(data: Omit<NGO, 'id' | 'created_at' | 'updated_a
       );
     }
 
-    // Attendre que toutes les données associées soient créées
     await Promise.all(promises);
 
     return { ...ngo, agreementUrl };
@@ -799,10 +835,47 @@ export async function updateNGO(id: string, data: Partial<NGO>) {
 
         if (insertError) throw insertError;
       }
+    }
 
-    return getNGO(id);
-  }
-    }catch (error) {
+      if (realizations?.length) {
+          const { data: currentRealizations } = await supabase
+              .from('ngo_realizations')
+              .select('*')
+              .eq('ngo_id', id);
+
+          const currentRealizationsString = JSON.stringify(currentRealizations?.sort((a, b) =>
+              a.sector.localeCompare(b.sector)
+          ));
+          const newRealizationsString = JSON.stringify(realizations.map(beneficiary => ({
+              ...beneficiary,
+              ngo_id: id
+          })).sort((a, b) =>
+              a.sector.localeCompare(b.sector)
+          ));
+
+          if (currentRealizationsString !== newRealizationsString) {
+              const { error: deleteError } = await supabase
+                  .from('ngo_realizations')
+                  .delete()
+                  .eq('ngo_id', id);
+
+              if (deleteError) throw deleteError;
+
+              const { error: insertError } = await supabase
+                  .from('ngo_realizations')
+                  .insert(realizations.map(realization => ({
+                      ngo_id: id,
+                      sector: realization.sector,
+                      indicator: realization.indicator,
+                      value: realization.value,
+                  })));
+
+              if (insertError) throw insertError;
+          }
+      }
+
+      return getNGO(id);
+  }catch (error) {
     console.error('Error in updateNGO:', error);
     throw error;
   }
@@ -822,7 +895,6 @@ export async function listBeneficiairies(ngoId?: string) {
   return data;
 }
 
-// Activity functions
 export async function listActivities(ngoId?: string) {
   let query = supabase
     .from('ngo_activity_sectors')

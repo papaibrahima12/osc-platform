@@ -23,6 +23,7 @@ import RealizationStep from '../components/RealizationStep';
 import { useDemoStore } from '../store/demo';
 import toast from "react-hot-toast";
 import {NGO} from "../types/user.ts";
+import {useAuthStore} from "../store/auth.ts";
 
 const steps = [
   { icon: Building2, label: 'Informations générales' },
@@ -40,13 +41,13 @@ interface EditNGOProps {
   onCancel: () => void;
 }
 
-// Clé pour le stockage local avec l'ID de l'ONG
 const getFormStorageKey = (ngoId: string) => `ngo_edit_form_data_${ngoId}`;
 const getStepStorageKey = (ngoId: string) => `ngo_edit_current_step_${ngoId}`;
 
 
 function EditNGO({ ngo, onCancel }: EditNGOProps) {
   const navigate = useNavigate();
+  const { user } = useAuthStore();
   const formContainerRef = useRef<HTMLDivElement>(null);
   const [currentStep, setCurrentStep] = useState(() => {
     const savedStep = localStorage.getItem(getStepStorageKey(ngo.id));
@@ -54,7 +55,6 @@ function EditNGO({ ngo, onCancel }: EditNGOProps) {
   });
 
   const { updateNGO } = useDemoStore();
-
   const [formData, setFormData] = useState(() =>{
     const initialFormData = {
       name: ngo.name,
@@ -79,7 +79,6 @@ function EditNGO({ ngo, onCancel }: EditNGOProps) {
       contactLastName: ngo.contact_last_name || '',
       contactEmail: ngo.contact_email || '',
       contactPhone: ngo.contact_phone || '',
-
       staff: ngo.staff ,
       intervention_zones: ngo.intervention_zones || [],
       activity_sectors: ngo.activity_sectors || [],
@@ -450,13 +449,21 @@ function EditNGO({ ngo, onCancel }: EditNGOProps) {
       });
 
       toast.success('OSC modifiée avec succès');
-      navigate(`/ngos/${ngo.id}`);
-      
+      localStorage.removeItem(getFormStorageKey(ngo.id));
+      localStorage.removeItem(getStepStorageKey(ngo.id));
+      if (user?.role === 'admin'){
+        navigate(`/ngos/${ngo.id}`);
+      }else {
+        navigate(`/my-osc/${ngo.id}`);
+        window.location.reload();
+      }
+
       onCancel();
     } catch (error) {
-      const errorMessage = error.message || 'Une erreur est survenue lors de la mise à jour de l\'OSC.';
+      const errorMessage = error instanceof Error ? error.message : ' here Une erreur est survenue lors de la mise à jour de l\'OSC.';
       setError(errorMessage);
       toast.error(errorMessage);
+      console.error('error', error);
     } finally {
       setIsLoading(false);
     }

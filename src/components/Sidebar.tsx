@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom';
-import {Home, Building2, Activity, LogOut, Globe2, BarChart3, Users, Book, DollarSign} from 'lucide-react';
+import {Home, Building2, Activity, LogOut,  BarChart3, Users, Book, DollarSign} from 'lucide-react';
 import { useAuthStore } from '../store/auth';
 
 interface SidebarProps {
@@ -42,6 +42,10 @@ export default function Sidebar({ role }: SidebarProps) {
               <Users className="w-5 h-5" />
               <span>Administrateurs</span>
             </NavLink>
+            <NavLink to="/managers" className={linkClass}>
+              <Users className="w-5 h-5" />
+              <span>Managers</span>
+            </NavLink>
           </>
         ) : role === 'admin' ? (
           <>
@@ -67,6 +71,14 @@ export default function Sidebar({ role }: SidebarProps) {
             <NavLink to="/my-osc" className={linkClass}>
               <Building2 className="w-5 h-5" />
               <span>Mon OSC</span>
+            </NavLink>
+            <NavLink to="/agreements" className={linkClass}>
+              <Book className="w-5 h-5" />
+              <span>Demande d'agréments</span>
+            </NavLink>
+            <NavLink to="/investments_plans" className={linkClass}>
+              <DollarSign className="w-5 h-5" />
+              <span>Plan d'investissement</span>
             </NavLink>
             <NavLink to="/activities" className={linkClass}>
               <Activity className="w-5 h-5" />
