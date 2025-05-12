@@ -17,11 +17,9 @@ export const useAuthStore = create<AuthState>((set) => ({
   loading: true,
   error: null,
   signIn: async (email: string, password: string) => {
-    console.log('Tentative de connexion pour:', email);
     set({ loading: true, error: null });
     try {
       const { user: authUser } = await apiSignIn(email, password);
-      console.log('Authentification réussie:', authUser);
 
       if (!authUser) {
         console.error('Aucun utilisateur retourné après authentification');
@@ -29,10 +27,7 @@ export const useAuthStore = create<AuthState>((set) => ({
         throw new Error('Identifiants invalides');
       }
       
-      // Récupérer le profil
-      console.log('Récupération du profil pour:', authUser.id);
       const profile = await getProfile(authUser.id);
-      console.log('Profil récupéré:', profile);
 
       set({ user: profile, loading: false });
       return { user: { ...profile, user_metadata: authUser.user_metadata } };
@@ -46,11 +41,9 @@ export const useAuthStore = create<AuthState>((set) => ({
     }
   },
   signOut: async () => {
-    console.log('Tentative de déconnexion');
     set({ loading: true, error: null });
     try {
       await apiSignOut();
-      console.log('Déconnexion réussie');
       set({ user: null });
     } catch (error: any) {
       console.error('Erreur de déconnexion:', error);
@@ -62,21 +55,16 @@ export const useAuthStore = create<AuthState>((set) => ({
     }
   },
   fetchProfile: async () => {
-    console.log('Récupération du profil utilisateur');
     set({ loading: true, error: null });
     try {
       const authUser = await getCurrentUser();
-      console.log('Utilisateur courant:', authUser);
 
       if (!authUser) {
-        console.log('Aucun utilisateur connecté');
         set({ user: null, loading: false });
         return;
       }
       
-      console.log('Récupération des détails du profil pour:', authUser.id);
       const profile = await getProfile(authUser.id);
-      console.log('Profil récupéré:', profile);
 
       set({ user: profile, loading: false });
     } catch (error: any) {

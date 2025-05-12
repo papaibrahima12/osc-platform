@@ -196,8 +196,6 @@ export default function CreateNGO() {
     if (total === 0) {
       errors.push('Le nombre total de personnel doit être supérieur à 0');
     }
-
-
     return errors;
   };
 

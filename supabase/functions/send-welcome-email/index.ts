@@ -34,8 +34,6 @@ serve(async (req) => {
     const payload: EmailPayload = await req.json()
     const { to, password, firstName } = payload
 
-    console.log('Sending email to:', to)
-
     const resend = new Resend(resendApiKey)
 
     const emailContent = `
@@ -69,8 +67,6 @@ serve(async (req) => {
       </html>
     `
 
-    console.log('Sending email via Resend...')
-    
     const { data, error } = await resend.emails.send({
       from: fromEmail,
       to: to,
@@ -82,8 +78,6 @@ serve(async (req) => {
       console.error('Resend error:', error)
       throw error
     }
-
-    console.log('Email sent successfully:', data)
 
     return new Response(
       JSON.stringify({ 

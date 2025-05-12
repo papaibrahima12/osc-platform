@@ -140,7 +140,6 @@ export async function createUser(email: string, userData: Partial<Profile>) {
       body: { email, userData }
     });
 
-      console.log('response', response);
 
     if (error) {
       if (error.message.includes('already exists')) {
@@ -583,7 +582,6 @@ export async function updateNGO(id: string, data: Partial<NGO>) {
 
       const currentStaffString = JSON.stringify(currentStaff || {});
       const newStaffString = JSON.stringify({ ...staff, ngo_id: id });
-      console.log('new Staff',newStaffString);
       if (currentStaffString !== newStaffString) {
         const { error: staffError } = await supabase
             .from('ngo_staff')

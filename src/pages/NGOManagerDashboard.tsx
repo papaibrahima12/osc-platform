@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from 'react';
-import {Routes, Route, useNavigate, Link} from 'react-router-dom';
+import {Routes, Route, useNavigate} from 'react-router-dom';
 import {
   Activity,
   Target,
@@ -12,9 +12,7 @@ import {
   Mail,
   Phone,
   MapPin,
-  Calendar, Award, Linkedin, Download,
-  Facebook,
-  Twitter
+  Calendar, Award, Linkedin, Download, Link, Facebook, Twitter
 } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
 import Navbar from '../components/Navbar';

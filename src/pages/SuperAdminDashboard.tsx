@@ -27,7 +27,6 @@ function renderStatCard({ title, value, icon: Icon, color }: { title: string; va
 
 function DashboardHome() {
   const { ngos, users, loading, fetchNGOs, fetchUsers } = useDemoStore();
-
   useEffect(() => {
     fetchNGOs();
     fetchUsers();
