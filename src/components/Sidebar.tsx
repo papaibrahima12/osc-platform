@@ -80,9 +80,13 @@ export default function Sidebar({ role }: SidebarProps) {
               <DollarSign className="w-5 h-5" />
               <span>Plan d'investissement</span>
             </NavLink>
-            <NavLink to="/activities" className={linkClass}>
-              <Activity className="w-5 h-5" />
-              <span>Activités</span>
+            {/*<NavLink to="/activities" className={linkClass}>*/}
+            {/*  <Activity className="w-5 h-5" />*/}
+            {/*  <span>Activités</span>*/}
+            {/*</NavLink>*/}
+            <NavLink to="/reports" className={linkClass}>
+              <BarChart3 className="w-5 h-5" />
+              <span>Rapports</span>
             </NavLink>
           </>
         )}

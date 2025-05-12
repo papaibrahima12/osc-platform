@@ -33,9 +33,6 @@ function DashboardHome() {
     fetchUsers();
   }, [fetchNGOs, fetchUsers]);
 
-  console.log('ngos length', ngos.length);
-  console.log('ngos', ngos);
-
   if (loading) {
     return (
       <div className="flex items-center justify-center h-96">

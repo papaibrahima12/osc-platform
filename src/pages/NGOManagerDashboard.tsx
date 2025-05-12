@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from 'react';
-import {Routes, Route, useNavigate, Link, useParams} from 'react-router-dom';
+import {Routes, Route, useNavigate, Link} from 'react-router-dom';
 import {
   Activity,
   Target,
@@ -27,6 +27,7 @@ import {SECTORS} from "../components/ActivitySectorsStep.tsx";
 import {SECTORS_INDICATORS} from "../components/RealizationStep.tsx";
 import {NGOInterventionZone} from "../types/user.ts";
 import AgreementsDoc from "./AgreementsDoc.tsx";
+import Reports from "./Reports.tsx";
 
 function StatCard({ title, value, icon: Icon, color }: { title: string; value: string | number; icon: React.ComponentType<{ className?: string }> ; color: string }) {
   return (
@@ -86,11 +87,11 @@ function DashboardHome() {
   );
 
   const averageBeneficiaries = safeActivities.length > 0
-    ? Math.round(totalBeneficiaries / safeActivities.length)
+    ? Math.round(totalBeneficiaries / totalActivities)
     : 0;
 
   const activePrograms = safeActivities.filter(
-    activity => activity.activity_year > new Date().getFullYear().toString()
+    activity => activity.activity_year >= new Date().getFullYear().toString()
   ).length;
 
   return (
@@ -134,7 +135,7 @@ function DashboardHome() {
                   <Activity className="w-5 h-5 text-blue-600" />
                 </div>
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-900">{activity.sector}</p>
+                  <p className="text-sm font-medium text-gray-900">{SECTORS[activity.sector as keyof typeof SECTORS]?.label}</p>
                   <p className="text-sm text-gray-500">
                     {new Date(activity.activity_year).toLocaleDateString()}
                   </p>
@@ -1356,7 +1357,8 @@ export default function NGOManagerDashboard() {
             <Route path="/my-osc/new" element={<CreateNGO/>} />
             <Route path="agreements" element={<AgreementsDoc />} />
             <Route path="investments_plans" element={<AgreementsDoc />} />
-            <Route path="/activities" element={<Activities />} />
+            <Route path="/reports" element={<Reports />} />
+            {/*<Route path="/activities" element={<Activities />} />*/}
             <Route path="/profile" element={<Profile />} />
           </Routes>
         </div>

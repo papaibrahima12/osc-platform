@@ -4,28 +4,31 @@ import {
   PieChart, Pie, Cell, ResponsiveContainer, LineChart, Line
 } from 'recharts';
 import { useDemoStore } from '../store/demo';
-import { Building2, Users, Target, Activity } from 'lucide-react';
+import {useAuthStore} from "../store/auth.ts";
+import {SECTORS} from "../components/ActivitySectorsStep.tsx";
 
 const COLORS = ['#3b82f6', '#10b981', '#8b5cf6', '#f59e0b', '#ef4444', '#6366f1'];
 
 export default function Reports() {
   const { ngos, loading, activities, fetchNGOs, fetchActivities } = useDemoStore();
+  const { user } = useAuthStore();
 
   useEffect(() => {
     fetchNGOs();
     fetchActivities();
-  }, [fetchNGOs]);
+  }, [fetchActivities, fetchNGOs]);
 
   const totalActivities = activities.reduce(
       (sum, activity) => sum + activity.activity_count,
       0
   );
 
-  // Statistiques par statut
   const statusStats = useMemo(() => {
     const stats = ngos.reduce((acc, ngo) => {
       const status = ngo.status === 'other' ? ngo.other_status : ngo.status;
-      acc[status] = (acc[status] || 0) + 1;
+      if (status) {
+        acc[status] = (acc[status] || 0) + 1;
+      }
       return acc;
     }, {} as Record<string, number>);
 
@@ -42,7 +45,6 @@ export default function Reports() {
     }));
   }, [ngos]);
 
-  // Statistiques par échelle
   const scaleStats = useMemo(() => {
     const stats = ngos.reduce((acc, ngo) => {
       acc[ngo.scale] = (acc[ngo.scale] || 0) + 1;
@@ -58,7 +60,6 @@ export default function Reports() {
     }));
   }, [ngos]);
 
-  // Statistiques du personnel
   const staffStats = useMemo(() => {
     return ngos.reduce((acc, ngo) => {
       const staff = ngo.staff;
@@ -85,7 +86,6 @@ export default function Reports() {
     });
   }, [ngos]);
 
-  // Statistiques des bénéficiaires par secteur
   const beneficiaryStats = useMemo(() => {
     const stats = ngos.reduce((acc, ngo) => {
       (ngo.beneficiaries || []).forEach(beneficiary => {
@@ -98,6 +98,7 @@ export default function Reports() {
             disabled: 0
           };
         }
+
         acc[beneficiary.sector].total += beneficiary.total;
         acc[beneficiary.sector].men += beneficiary.men;
         acc[beneficiary.sector].women += beneficiary.women;
@@ -113,6 +114,13 @@ export default function Reports() {
     }));
   }, [ngos]);
 
+  const beneficiaryStatsWithLabels = useMemo(() => {
+    return beneficiaryStats.map((beneficiary) => ({
+      ...beneficiary,
+      label: SECTORS[beneficiary.sector as keyof typeof SECTORS]?.label || beneficiary.sector, // Utilise le label ou la clé secteur si manquant
+    }));
+  }, [beneficiaryStats]);
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-96">
@@ -125,63 +133,65 @@ export default function Reports() {
     <div className="space-y-8">
       <div className="pt-4">
         <h1 className="text-2xl font-bold text-gray-900">Rapports et Statistiques</h1>
-        <p className="mt-1 text-gray-500">Vue d'ensemble des OSC et leurs activités</p>
+        { user?.role === 'admin' && (
+            <p className="mt-1 text-gray-500">Vue d'ensemble des OSC et leurs activités</p>
+        )}
       </div>
 
       {/* Statistiques générales */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-500">Total OSC</p>
-              <p className="mt-2 text-3xl font-bold text-gray-900">{ngos.length}</p>
-            </div>
-            <div className="p-3 rounded-lg bg-blue-600">
-              <Building2 className="w-6 h-6 text-white" />
-            </div>
-          </div>
-        </div>
+      {/*<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">*/}
+      {/*  <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">*/}
+      {/*    <div className="flex items-center justify-between">*/}
+      {/*      <div>*/}
+      {/*        <p className="text-sm font-medium text-gray-500">Total OSC</p>*/}
+      {/*        <p className="mt-2 text-3xl font-bold text-gray-900">{ngos.length}</p>*/}
+      {/*      </div>*/}
+      {/*      <div className="p-3 rounded-lg bg-blue-600">*/}
+      {/*        <Building2 className="w-6 h-6 text-white" />*/}
+      {/*      </div>*/}
+      {/*    </div>*/}
+      {/*  </div>*/}
 
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-500">Total Personnel</p>
-              <p className="mt-2 text-3xl font-bold text-gray-900">{staffStats.total}</p>
-            </div>
-            <div className="p-3 rounded-lg bg-emerald-600">
-              <Users className="w-6 h-6 text-white" />
-            </div>
-          </div>
-        </div>
+      {/*  <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">*/}
+      {/*    <div className="flex items-center justify-between">*/}
+      {/*      <div>*/}
+      {/*        <p className="text-sm font-medium text-gray-500">Total Personnel</p>*/}
+      {/*        <p className="mt-2 text-3xl font-bold text-gray-900">{staffStats.total}</p>*/}
+      {/*      </div>*/}
+      {/*      <div className="p-3 rounded-lg bg-emerald-600">*/}
+      {/*        <Users className="w-6 h-6 text-white" />*/}
+      {/*      </div>*/}
+      {/*    </div>*/}
+      {/*  </div>*/}
 
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-500">Total Activités</p>
-              <p className="mt-2 text-3xl font-bold text-gray-900">
-                {totalActivities}
-              </p>
-            </div>
-            <div className="p-3 rounded-lg bg-violet-600">
-              <Activity className="w-6 h-6 text-white" />
-            </div>
-          </div>
-        </div>
+      {/*  <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">*/}
+      {/*    <div className="flex items-center justify-between">*/}
+      {/*      <div>*/}
+      {/*        <p className="text-sm font-medium text-gray-500">Total Activités</p>*/}
+      {/*        <p className="mt-2 text-3xl font-bold text-gray-900">*/}
+      {/*          {totalActivities}*/}
+      {/*        </p>*/}
+      {/*      </div>*/}
+      {/*      <div className="p-3 rounded-lg bg-violet-600">*/}
+      {/*        <Activity className="w-6 h-6 text-white" />*/}
+      {/*      </div>*/}
+      {/*    </div>*/}
+      {/*  </div>*/}
 
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-500">Total Bénéficiaires</p>
-              <p className="mt-2 text-3xl font-bold text-gray-900">
-                {beneficiaryStats.reduce((sum, stat) => sum + stat.total, 0)}
-              </p>
-            </div>
-            <div className="p-3 rounded-lg bg-amber-600">
-              <Target className="w-6 h-6 text-white" />
-            </div>
-          </div>
-        </div>
-      </div>
+      {/*  <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">*/}
+      {/*    <div className="flex items-center justify-between">*/}
+      {/*      <div>*/}
+      {/*        <p className="text-sm font-medium text-gray-500">Total Bénéficiaires</p>*/}
+      {/*        <p className="mt-2 text-3xl font-bold text-gray-900">*/}
+      {/*          {beneficiaryStats.reduce((sum, stat) => sum + stat.total, 0)}*/}
+      {/*        </p>*/}
+      {/*      </div>*/}
+      {/*      <div className="p-3 rounded-lg bg-amber-600">*/}
+      {/*        <Target className="w-6 h-6 text-white" />*/}
+      {/*      </div>*/}
+      {/*    </div>*/}
+      {/*  </div>*/}
+      {/*</div>*/}
 
       {/* Graphiques */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -261,9 +271,9 @@ export default function Reports() {
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Bénéficiaires par secteur</h2>
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={beneficiaryStats}>
+              <LineChart data={beneficiaryStatsWithLabels}>
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="sector" />
+                <XAxis dataKey="label" />
                 <YAxis />
                 <Tooltip />
                 <Legend />
