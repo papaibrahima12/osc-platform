@@ -606,8 +606,11 @@ export default function CreateNGO() {
       toast.success('OSC créée avec succès');
       localStorage.removeItem(FORM_STORAGE_KEY);
       localStorage.removeItem(STEP_STORAGE_KEY);
-      if (user?.role === 'ngo_manager')  navigate('/my-osc');
-      navigate('/ngos');
+      if (user?.role === 'ngo_manager') {
+        navigate('/my-osc');
+      } else {
+        navigate('/ngos');
+      }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Une erreur est survenue lors de la création de l\'OSC.';
       setError(errorMessage);
