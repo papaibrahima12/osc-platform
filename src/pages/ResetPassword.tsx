@@ -1,18 +1,32 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, {useEffect, useState} from 'react';
+import {useNavigate, useSearchParams} from 'react-router-dom';
 import { Eye, EyeOff, Globe2 } from 'lucide-react';
 import { updatePassword } from '../lib/api';
+import {supabase} from "../lib/supabase.ts";
+import toast from "react-hot-toast";
 
 export default function ResetPassword() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [success, setSuccess] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
+  useEffect(() => {
+    const accessToken = searchParams.get('access_token');
+    const type = searchParams.get('type');
+
+    if (accessToken && type === 'recovery') {
+      supabase.auth.setSession({ access_token: accessToken, refresh_token: '' });
+    }
+  }, [searchParams]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSuccess('');
     
     if (newPassword !== confirmPassword) {
       setError('Les mots de passe ne correspondent pas');
@@ -29,8 +43,11 @@ export default function ResetPassword() {
 
     try {
       await updatePassword(newPassword);
+      setSuccess('Mot de passe mis à jour avec succès !');
+      toast.success('Mot de passe mis à jour avec succès !');
       navigate('/login');
     } catch (err) {
+      console.error('error', err);
       setError('Une erreur est survenue lors de la mise à jour du mot de passe');
     } finally {
       setIsLoading(false);
@@ -61,6 +78,11 @@ export default function ResetPassword() {
           <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg mb-4">
             {error}
           </div>
+        )}
+        {success && (
+            <div className="bg-red-50 border border-red-200 text-green-400 px-4 py-3 rounded-lg mb-4">
+              {success}
+            </div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-6">

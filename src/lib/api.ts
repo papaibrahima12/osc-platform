@@ -32,12 +32,14 @@ export async function getCurrentUser() {
 
 export async function resetPassword(email: string) {
   try {
-    // Vérifier d'abord si l'utilisateur existe dans profiles
+    console.log('email', email);
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('id')
       .eq('email', email)
       .maybeSingle();
+
+    console.log('profile', profile);
     
     if (profileError) throw profileError;
     
@@ -45,7 +47,6 @@ export async function resetPassword(email: string) {
       throw new Error('Aucun compte n\'existe avec cet email');
     }
 
-    // Envoyer l'email de réinitialisation
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${window.location.origin}/reset-password`
     });
