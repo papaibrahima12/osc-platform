@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from 'react';
-import {useNavigate, useSearchParams} from 'react-router-dom';
+import {useNavigate} from 'react-router-dom';
 import { Eye, EyeOff, Globe2 } from 'lucide-react';
 import { updatePassword } from '../lib/api';
 import {supabase} from "../lib/supabase.ts";
@@ -7,7 +7,7 @@ import toast from "react-hot-toast";
 
 export default function ResetPassword() {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const [sessionSet, setSessionSet] = useState(false);
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -16,13 +16,24 @@ export default function ResetPassword() {
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    const accessToken = searchParams.get('access_token');
-    const type = searchParams.get('type');
+    const hash = window.location.hash;
+    const params = new URLSearchParams(hash.substring(1));
+    const access_token = params.get('access_token');
+    const type = params.get('type');
 
-    if (accessToken && type === 'recovery') {
-      supabase.auth.setSession({ access_token: accessToken, refresh_token: '' });
+    if (type === 'recovery' && access_token) {
+      supabase.auth
+          .setSession({ access_token, refresh_token: '' })
+          .then(({ error }) => {
+            if (error) {
+              console.error('Erreur lors de la récupération :', error.message);
+              toast.error("Lien invalide ou expiré");
+            } else {
+              setSessionSet(true);
+            }
+          });
     }
-  }, [searchParams]);
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
