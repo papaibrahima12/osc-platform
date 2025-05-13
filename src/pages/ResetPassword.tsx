@@ -57,10 +57,10 @@ export default function ResetPassword() {
             <Globe2 className="h-8 w-8 text-white" />
           </div>
         </div>
-        
+
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Réinitialisation du mot de passe</h1>
-          <p className="text-blue-600 font-medium mt-1">Plateforme des OSC du Sénégal</p>
+          <h1 className="text-2xl font-bold text-blue-600">e_OSC Sénégal</h1>
+          <p className="text-black text-lg font-semibold italic mt-1">Réinitialisation du mot de passe</p>
         </div>
         
         {error && (
