@@ -39,8 +39,6 @@ export async function resetPassword(email: string) {
       .eq('email', email)
       .maybeSingle();
 
-    console.log('profile', profile);
-    
     if (profileError) throw profileError;
     
     if (!profile) {

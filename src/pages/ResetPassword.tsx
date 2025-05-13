@@ -1,39 +1,17 @@
-import React, {useEffect, useState} from 'react';
+import React, {useState} from 'react';
 import {useNavigate} from 'react-router-dom';
 import { Eye, EyeOff, Globe2 } from 'lucide-react';
 import { updatePassword } from '../lib/api';
-import {supabase} from "../lib/supabase.ts";
 import toast from "react-hot-toast";
 
 export default function ResetPassword() {
   const navigate = useNavigate();
-  const [sessionSet, setSessionSet] = useState(false);
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [success, setSuccess] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-
-  useEffect(() => {
-    const hash = window.location.hash;
-    const params = new URLSearchParams(hash.substring(1));
-    const access_token = params.get('access_token');
-    const type = params.get('type');
-
-    if (type === 'recovery' && access_token) {
-      supabase.auth
-          .setSession({ access_token, refresh_token: '' })
-          .then(({ error }) => {
-            if (error) {
-              console.error('Erreur lors de la récupération :', error.message);
-              toast.error("Lien invalide ou expiré");
-            } else {
-              setSessionSet(true);
-            }
-          });
-    }
-  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
