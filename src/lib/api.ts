@@ -390,7 +390,6 @@ export async function createNGO(data: Omit<NGO, 'id' | 'created_at' | 'updated_a
 
       const departmentZones = intervention_zones.filter(zone => zone.zone_type === 'department');
       if (departmentZones.length) {
-        // Get the inserted regions to map parent IDs
         const { data: insertedRegions } = await supabase
             .from('ngo_intervention_zones')
             .select('id, name')
@@ -414,10 +413,8 @@ export async function createNGO(data: Omit<NGO, 'id' | 'created_at' | 'updated_a
         if (deptError) throw deptError;
       }
 
-      // Finally insert municipalities with their department parent IDs
       const municipalityZones = intervention_zones.filter(zone => zone.zone_type === 'municipality');
       if (municipalityZones.length) {
-        // Get the inserted departments to map parent IDs
         const { data: insertedDepts } = await supabase
             .from('ngo_intervention_zones')
             .select('id, name')
@@ -442,7 +439,6 @@ export async function createNGO(data: Omit<NGO, 'id' | 'created_at' | 'updated_a
       }
     }
 
-    // Investments
     if (investments?.length) {
       promises.push(
           supabase
@@ -457,7 +453,6 @@ export async function createNGO(data: Omit<NGO, 'id' | 'created_at' | 'updated_a
       );
     }
 
-    // Financial resources
     if (financial_resources?.length) {
       promises.push(
           supabase
@@ -473,7 +468,6 @@ export async function createNGO(data: Omit<NGO, 'id' | 'created_at' | 'updated_a
       );
     }
 
-    // Beneficiaries
     if (beneficiaries?.length) {
       promises.push(
           supabase
@@ -499,7 +493,6 @@ export async function createNGO(data: Omit<NGO, 'id' | 'created_at' | 'updated_a
       );
     }
 
-    // Realizations
     if (realizations?.length) {
       promises.push(
           supabase
@@ -520,7 +513,19 @@ export async function createNGO(data: Omit<NGO, 'id' | 'created_at' | 'updated_a
     console.error('Error in createNGO:', error);
     throw error;
   }
+
 }
+
+function normalizeStaffObject(staff: any) {
+    const {
+        id,
+        created_at,
+        updated_at,
+        ...relevantFields
+    } = staff; // Exclure les champs supplémentaires
+    return relevantFields;
+}
+
 
 export async function updateNGO(id: string, data: Partial<NGO>) {
   const {
@@ -536,7 +541,6 @@ export async function updateNGO(id: string, data: Partial<NGO>) {
   } = data;
 
   try {
-    // Update NGO data
     const { data: ngo, error: ngoError } = await supabase
       .from('ngos')
       .update({
@@ -572,23 +576,43 @@ export async function updateNGO(id: string, data: Partial<NGO>) {
         if (uploadError) throw uploadError;
     }
 
-    if (staff) {
-      const { data: currentStaff } = await supabase
-          .from('ngo_staff')
-          .select('*')
-          .eq('ngo_id', id)
-          .maybeSingle();
+      if (staff) {
+          const { data: currentStaff } = await supabase
+              .from('ngo_staff')
+              .select('*')
+              .eq('ngo_id', id)
+              .single();
 
-      const currentStaffString = JSON.stringify(currentStaff || {});
-      const newStaffString = JSON.stringify({ ...staff, ngo_id: id });
-      if (currentStaffString !== newStaffString) {
-        const { error: staffError } = await supabase
-            .from('ngo_staff')
-            .upsert(newStaffString);
+          // Normaliser les deux objets pour une comparaison correcte
+          const normalizedCurrentStaff = currentStaff ? normalizeStaffObject(currentStaff) : {};
+          const normalizedNewStaff = normalizeStaffObject({ ...staff, ngo_id: id });
 
-        if (staffError) throw staffError;
+          console.log('Staff actuel :', normalizedCurrentStaff);
+          console.log('Staff nouveau :', normalizedNewStaff);
+
+          // Comparer correctement les objets normalisés
+          if (JSON.stringify(normalizedCurrentStaff) !== JSON.stringify(normalizedNewStaff)) {
+              console.log('Différence détectée, mise à jour du staff');
+
+              if (!currentStaff) {
+                  const { error: insertError } = await supabase
+                      .from('ngo_staff')
+                      .insert({ ...staff, ngo_id: id });
+
+                  if (insertError) throw insertError;
+              } else {
+                  // Mise à jour si le staff existe déjà
+                  const { error: staffError } = await supabase
+                      .from('ngo_staff')
+                      .update({ ...staff })
+                      .eq('ngo_id', id);
+
+                  if (staffError) throw staffError;
+              }
+          } else {
+              console.log('Aucune différence dans les données du staff, pas de mise à jour nécessaire');
+          }
       }
-    }
 
     if (activity_sectors?.length) {
       const { data: currentSectors } = await supabase
