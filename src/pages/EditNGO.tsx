@@ -371,12 +371,17 @@ function EditNGO({ ngo, onCancel }: EditNGOProps) {
           />
         );
       case 6:
+      { const activityYear = formData.activity_sectors.length > 0
+          ? formData.activity_sectors[0].activity_year
+          : undefined;
+
         return (
-          <FinancialResourcesStep
-            data={formData.financial_resources}
-            onChange={(data) => handleFormUpdate({ financial_resources: data })}
-          />
-        );
+            <FinancialResourcesStep
+                data={formData.financial_resources}
+                onChange={(data) => handleFormUpdate({ financial_resources: data })}
+                activityYear={activityYear}
+            />
+        ); }
       case 7:
         return (
           <BeneficiariesStep

@@ -17,7 +17,6 @@ const NATIONAL_FUNDING_SOURCES = [
   { id: 'private_sector_grant', label: 'Subvention Privée' }
 ] as const;
 
-// Ajouter la liste des pays UE
 const EU_COUNTRIES = [
   { id: 'ue', label: 'Union Européenne' },
   { id: 'france', label: 'France' },
@@ -194,6 +193,8 @@ export default function FinancialResourcesStep({ data, onChange, activityYear }:
   });
 
   useEffect(() => {
+    console.log('activityYear', activityYear);
+    console.log('fundingYear', fundingYear);
     if (activityYear && activityYear !== fundingYear) {
       setFundingYear(activityYear);
 

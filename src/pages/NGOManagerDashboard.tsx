@@ -157,14 +157,14 @@ function DashboardHome() {
               <div className="flex items-center justify-between mb-2">
                 <p className="text-sm font-medium text-gray-600">Moyenne par activité</p>
                 <p className="text-lg font-semibold text-gray-900">
-                  {averageBeneficiaries}
+                  {averageBeneficiaries  || 0}
                 </p>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-2">
                 <div
                   className="bg-blue-600 h-2 rounded-full"
                   style={{
-                    width: `${Math.min((averageBeneficiaries / 1000) * 100, 100)}%`
+                    width: `${Math.min((averageBeneficiaries || 0 / 1000) * 100, 100)}%`
                   }}
                 />
               </div>

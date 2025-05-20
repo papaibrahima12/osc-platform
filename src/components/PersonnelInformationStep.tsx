@@ -6,7 +6,6 @@ interface PersonnelInformationStepProps {
 }
 
 export default function PersonnelInformationStep({ data, onChange }: PersonnelInformationStepProps) {
-  // Ensure data is properly initialized
   const safeData = {
     men_count: data?.men_count || 0,
     women_count: data?.women_count || 0,
