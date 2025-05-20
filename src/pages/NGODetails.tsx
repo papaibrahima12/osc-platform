@@ -9,6 +9,7 @@ import { useDemoStore } from '../store/demo';
 import { SECTORS } from '../components/ActivitySectorsStep';
 import { SECTORS_INDICATORS } from '../components/RealizationStep';
 import EditNGO from './EditNGO';
+import {useAuthStore} from "../store/auth.ts";
 
 function renderStatCard({ title, value, icon: Icon, color }: { title: string; value: string | number; icon: React.ComponentType<{ className?: string }>; color: string }) {
   return (
@@ -36,6 +37,7 @@ function NGODetails() {
   const { ngos, activities, fetchNGOs, fetchActivities } = useDemoStore();
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
+  const { user } = useAuthStore();
 
   useEffect(() => {
     const loadData = async () => {
@@ -122,13 +124,16 @@ function NGODetails() {
           <p className="mt-1 text-gray-500">Détails de l'organisation</p>
         </div>
         <div className="flex space-x-3">
-          <button
-            onClick={() => setIsEditing(true)}
-            className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-lg hover:bg-blue-700 flex items-center space-x-2"
-          >
-            <Edit className="w-4 h-4" />
-            <span>Modifier</span>
-          </button>
+          {
+            user?.role === 'ngo_manager' && (
+                  <button
+                      onClick={() => setIsEditing(true)}
+                      className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-lg hover:bg-blue-700 flex items-center space-x-2"
+                  >
+                    <Edit className="w-4 h-4" />
+                    <span>Modifier</span>
+                  </button>
+          )}
           <button
             onClick={() => navigate('/ngos')}
             className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"

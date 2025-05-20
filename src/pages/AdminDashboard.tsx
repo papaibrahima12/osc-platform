@@ -31,13 +31,12 @@ function renderStatCard({ title, value, icon: Icon, color }: { title: string; va
 
 function DashboardHome() {
   const { ngos, users, activities, beneficiairies, loading, fetchNGOs, fetchUsers, fetchActivities, fetchBeneficiairies } = useDemoStore();
-
   useEffect(() => {
     fetchNGOs();
     fetchUsers();
     fetchActivities();
     fetchBeneficiairies();
-  }, [fetchNGOs, fetchUsers, fetchActivities]);
+  }, [fetchNGOs, fetchUsers, fetchActivities, fetchBeneficiairies]);
 
   if (loading) {
     return (
@@ -170,6 +169,7 @@ function DashboardHome() {
 function NGOs() {
   const { ngos, loading, fetchNGOs } = useDemoStore();
   const navigate = useNavigate();
+  const { user } = useAuthStore();
 
   useEffect(() => {
     fetchNGOs();
@@ -190,13 +190,16 @@ function NGOs() {
           <h2 className="text-2xl font-bold text-gray-900">Organisations</h2>
           <p className="mt-1 text-gray-500">Gérer les OSC enregistrées</p>
         </div>
-        <Link
-          to="/ngos/new"
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 hover:bg-blue-700 transition-colors"
-        >
-          <Plus className="w-5 h-5" />
-          <span>Nouvelle OSC</span>
-        </Link>
+        {
+          user?.role !== 'admin' && (
+                <Link
+                    to="/ngos/new"
+                    className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 hover:bg-blue-700 transition-colors"
+                >
+                  <Plus className="w-5 h-5" />
+                  <span>Nouvelle OSC</span>
+                </Link>
+            )}
       </div>
 
       <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
