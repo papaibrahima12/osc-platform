@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import {
   Building2, Mail, Phone, Calendar, User, MapPin, Activity, Globe2, Users,
   Award, Target, Link, Linkedin, Download,
-  Edit, Facebook
+  Edit, Facebook, Twitter
 } from 'lucide-react';
 import { useDemoStore } from '../store/demo';
 import { SECTORS } from '../components/ActivitySectorsStep';
