@@ -183,7 +183,6 @@ export default function GeneralInformationStep({ data, onChange }: GeneralInform
               </select>
             </div>
 
-            {/* Other Status */}
             {data.status === 'other' && (
                 <div>
                   <label htmlFor="otherStatus" className="block text-sm font-medium text-gray-700">
@@ -248,7 +247,6 @@ export default function GeneralInformationStep({ data, onChange }: GeneralInform
                 </>
             )}
 
-            {/* Scale - Different options based on status */}
             {data.status && (
                 <div>
                   <label htmlFor="scale" className="block text-sm font-medium text-gray-700">

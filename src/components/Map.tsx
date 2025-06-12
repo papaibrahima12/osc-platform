@@ -1,10 +1,8 @@
-import React from 'react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { NGO } from '../types/user';
 
-// Fix Leaflet default marker icon
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
@@ -16,13 +14,10 @@ interface MapProps {
   ngos: NGO[];
 }
 
-// Default coordinates for Senegal (centered on Dakar)
 const DEFAULT_CENTER: [number, number] = [14.6937, -17.4441];
 
 export default function Map({ ngos }: MapProps) {
-  // Get coordinates for NGOs
   const ngoCoordinates = ngos.map(ngo => {
-    // Use stored coordinates if available
     if (ngo.latitude && ngo.longitude) {
       return {
         ngo,
@@ -30,7 +25,6 @@ export default function Map({ ngos }: MapProps) {
       };
     }
 
-    // Fallback to default coordinates (Dakar)
     return {
       ngo,
       coordinates: DEFAULT_CENTER
